@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from backend.app.app import db
+from backend.app import db
 
 
 def generate_uuid():

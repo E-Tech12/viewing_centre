@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from backend.app.app import db
+from backend.app import db
 from app.models import Seat, Event, SeatHold, Ticket, Booking, EventSection
 
 seats_bp = Blueprint("seats", __name__)
