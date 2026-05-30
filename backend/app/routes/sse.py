@@ -1,7 +1,7 @@
 import json
 import time
 from flask import Blueprint, Response, request
-from app.services.redis_service import redis_client
+from backend.app.services.redis_service import redis_client
 
 sse_bp = Blueprint("sse", __name__)
 

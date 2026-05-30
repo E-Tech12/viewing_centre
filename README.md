@@ -48,6 +48,6 @@ FRONTEND_URL=http://localhost:5173
 
 ### Frontend `.env.local`
 ```
-VITE_API_URL=http://localhost:5000
+VITE_API_URL=https://sportzone-4miu.onrender.com/
 VITE_PAYSTACK_PUBLIC_KEY=pk_test_...
 ```

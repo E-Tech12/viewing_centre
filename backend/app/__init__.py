@@ -18,10 +18,15 @@ mail = Mail()
 def create_app(config_name=None):
     app = Flask(__name__)
 
-    # ── Config ──────────────────────────────────────────────────
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
-        "DATABASE_URL", "sqlite:///sportzone.db"
-    )
+    db_url = os.getenv("DATABASE_URL")
+
+    if not db_url:
+        raise ValueError("DATABASE_URL is not set")
+
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_url
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY", "dev-secret-change-me")
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = 3600  # 1 hour
@@ -42,14 +47,14 @@ def create_app(config_name=None):
     CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
     # ── Blueprints ───────────────────────────────────────────────
-    from app.routes.auth import auth_bp
-    from app.routes.events import events_bp
-    from app.routes.seats_backend import seats_bp
-    from app.routes.bookings import bookings_bp
-    from app.routes.tickets import tickets_bp
-    from app.routes.payments import payments_bp
-    from app.routes.admin import admin_bp
-    from app.routes.sse import sse_bp
+    from backend.app.routes.auth import auth_bp
+    from backend.app.routes.events import events_bp
+    from backend.app.routes.seats_backend import seats_bp
+    from backend.app.routes.bookings import bookings_bp
+    from backend.app.routes.tickets import tickets_bp
+    from backend.app.routes.payments import payments_bp
+    from backend.app.routes.admin import admin_bp
+    from backend.app.routes.sse import sse_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(events_bp, url_prefix="/api/events")

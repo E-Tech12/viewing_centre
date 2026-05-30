@@ -8,8 +8,8 @@ from flask_jwt_extended import (
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app import db
-from app.models import User
+from backend.app import db
+from backend.app.models import User
 
 auth_bp = Blueprint("auth", __name__)
 

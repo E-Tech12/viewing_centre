@@ -158,14 +158,14 @@ export default function HomePage() {
           }}
         />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 w-full z-10">
-          <div className="grid lg:grid-cols-2 gap-14 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-24 w-full z-10">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-14 items-start lg:items-center">
             {/* LEFT CONTENT */}
             <div>
               <div className="flex items-center gap-3 mb-6">
-                <div className="flex items-center gap-2 px-4 py-2 bg-volt-400/10 border border-volt-400/20 rounded-sm backdrop-blur-sm">
+                <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-volt-400/10 border border-volt-400/20 rounded-sm backdrop-blur-sm">
                   <div className="w-2 h-2 rounded-full bg-volt-400 animate-pulse" />
-                  <span className="font-mono text-volt-400 text-xs uppercase tracking-widest font-semibold">
+                  <span className="font-mono text-volt-400 text-[10px] sm:text-xs uppercase tracking-widest font-semibold">
                     #1 Lagos Viewing Arena
                   </span>
                 </div>
@@ -174,7 +174,7 @@ export default function HomePage() {
               <h1
                 className="font-display uppercase text-white leading-[0.85] mb-6"
                 style={{
-                  fontSize: 'clamp(3rem, 9vw, 6.5rem)',
+                  fontSize: 'clamp(2.5rem, 8vw, 6.5rem)',
                   fontWeight: 900,
                   letterSpacing: '-0.02em',
                 }}
@@ -188,15 +188,15 @@ export default function HomePage() {
                 EXPERIENCE
               </h1>
 
-              <p className="text-slate-300 text-lg leading-relaxed max-w-xl mb-8">
+              <p className="text-slate-300 text-sm sm:text-lg leading-relaxed max-w-xl mb-8">
                 Watch live football on 4K giant screens with surround sound.
                 Premier League, UCL, La Liga — plus gaming tournaments & live events.
               </p>
 
-              <div className="flex flex-wrap gap-4 mb-12">
+              <div className="flex flex-wrap gap-3 sm:gap-4 mb-12">
                 <Link
                   to="/events"
-                  className="btn-volt text-sm px-8 py-4 group relative overflow-hidden"
+                  className="btn-volt text-xs sm:text-sm px-6 sm:px-8 py-3 sm:py-4 group relative overflow-hidden"
                 >
                   <span className="relative z-10 flex items-center gap-1">
                     Book Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
@@ -207,7 +207,7 @@ export default function HomePage() {
                 {!user ? (
                   <Link
                     to="/register"
-                    className="btn-outline text-sm px-8 py-4 group"
+                    className="btn-outline text-xs sm:text-sm px-6 sm:px-8 py-3 sm:py-4 group"
                   >
                     Join Free
                     <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
@@ -215,7 +215,7 @@ export default function HomePage() {
                 ) : (
                   <Link
                     to="/my-tickets"
-                    className="btn-outline text-sm px-8 py-4 group"
+                    className="btn-outline text-xs sm:text-sm px-6 sm:px-8 py-3 sm:py-4 group"
                   >
                     My Tickets
                     <ChevronRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
@@ -224,7 +224,7 @@ export default function HomePage() {
               </div>
 
               {/* Enhanced Stats */}
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
                 {[
                   { icon: Users, value: '2,500+', label: 'Active Fans' },
                   { icon: Trophy, value: '180+', label: 'Matches Live' },
@@ -232,17 +232,17 @@ export default function HomePage() {
                 ].map(({ icon: Icon, value, label }) => (
                   <div
                     key={label}
-                    className="group bg-white/[0.03] border border-white/5 rounded-sm p-4 hover:border-volt-400/30 hover:bg-volt-400/5 transition-all duration-300"
+                    className="group bg-white/[0.03] border border-white/5 rounded-sm p-2 sm:p-4 hover:border-volt-400/30 hover:bg-volt-400/5 transition-all duration-300"
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 rounded-sm bg-volt-400/10 border border-volt-400/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Icon size={14} className="text-volt-400" />
+                    <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                      <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-sm bg-volt-400/10 border border-volt-400/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Icon size={12} className="sm:text-volt-400 text-volt-400" />
                       </div>
-                      <div className="font-display text-white text-2xl font-black">
+                      <div className="font-display text-white text-lg sm:text-2xl font-black">
                         {value}
                       </div>
                     </div>
-                    <div className="font-mono text-slate-500 text-xs uppercase tracking-widest">
+                    <div className="font-mono text-slate-500 text-[8px] sm:text-xs uppercase tracking-widest">
                       {label}
                     </div>
                   </div>
@@ -250,9 +250,9 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* RIGHT SIDE - Football Highlights Gallery */}
-            <div className="hidden lg:flex justify-end animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <div className="relative w-full max-w-md">
+            {/* RIGHT SIDE - Football Highlights Gallery - NOW RESPONSIVE ON ALL SCREENS */}
+            <div className="flex justify-center lg:justify-end w-full mt-8 lg:mt-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="relative w-full max-w-sm md:max-w-md">
                 {/* Glow Effect */}
                 <div className="absolute -inset-1 bg-gradient-to-r from-volt-400/30 via-volt-400/10 to-volt-400/20 rounded-sm blur-xl animate-pulse" />
                 
@@ -260,7 +260,7 @@ export default function HomePage() {
                 <div className="relative rounded-sm border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-pitch-800 to-pitch-900">
                   
                   {/* Rotating Match Highlights */}
-                  <div className="relative h-[450px] overflow-hidden">
+                  <div className="relative h-[320px] sm:h-[380px] md:h-[450px] overflow-hidden">
                     {footballHighlights.map((highlight, idx) => (
                       <div
                         key={idx}
@@ -276,33 +276,33 @@ export default function HomePage() {
                         <div className="absolute inset-0 bg-gradient-to-t from-pitch-950 via-pitch-950/60 to-transparent" />
                         
                         {/* Live Badge */}
-                        <div className="absolute top-4 left-4 flex items-center gap-2 bg-red-600/90 backdrop-blur px-3 py-1.5 rounded-sm">
-                          <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                          <span className="font-mono text-white text-[10px] uppercase tracking-widest font-bold">HIGHLIGHTS</span>
+                        <div className="absolute top-3 left-3 sm:top-4 sm:left-4 flex items-center gap-2 bg-red-600/90 backdrop-blur px-2 py-1 sm:px-3 sm:py-1.5 rounded-sm">
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                          <span className="font-mono text-white text-[8px] sm:text-[10px] uppercase tracking-widest font-bold">HIGHLIGHTS</span>
                         </div>
                         
                         {/* Match Info Overlay */}
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <div className="bg-pitch-950/85 backdrop-blur-md rounded-sm p-4 border border-volt-400/20">
+                        <div className="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4">
+                          <div className="bg-pitch-950/85 backdrop-blur-md rounded-sm p-3 sm:p-4 border border-volt-400/20">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="font-mono text-volt-400 text-[10px] uppercase tracking-widest">{highlight.league}</span>
+                              <span className="font-mono text-volt-400 text-[8px] sm:text-[10px] uppercase tracking-widest">{highlight.league}</span>
                               <div className="flex items-center gap-1">
-                                <Clock size={10} className="text-volt-400" />
-                                <span className="font-mono text-volt-400 text-[10px]">{highlight.time}</span>
+                                <Clock size={8} className="sm:w-3 sm:h-3 text-volt-400" />
+                                <span className="font-mono text-volt-400 text-[8px] sm:text-[10px]">{highlight.time}</span>
                               </div>
                             </div>
                             
-                            <p className="font-display font-black text-white text-xl mb-1">
+                            <p className="font-display font-black text-white text-sm sm:text-xl mb-1">
                               {highlight.match}
                             </p>
                             
                             <div className="flex items-center gap-2 mt-2">
                               <div className="flex items-center gap-1">
-                                <Star size={10} className="fill-volt-400 text-volt-400" />
-                                <span className="text-slate-300 text-xs">4.8k watching</span>
+                                <Star size={8} className="sm:w-3 sm:h-3 fill-volt-400 text-volt-400" />
+                                <span className="text-slate-300 text-[10px] sm:text-xs">4.8k watching</span>
                               </div>
-                              <div className="w-px h-3 bg-white/20" />
-                              <span className="font-mono text-slate-400 text-[10px]">Live Replay</span>
+                              <div className="w-px h-2 sm:h-3 bg-white/20" />
+                              <span className="font-mono text-slate-400 text-[8px] sm:text-[10px]">Live Replay</span>
                             </div>
                           </div>
                         </div>
@@ -310,15 +310,15 @@ export default function HomePage() {
                     ))}
                     
                     {/* Slide Indicators */}
-                    <div className="absolute bottom-24 left-0 right-0 flex justify-center gap-2 z-20">
+                    <div className="absolute bottom-20 sm:bottom-24 left-0 right-0 flex justify-center gap-1.5 sm:gap-2 z-20">
                       {footballHighlights.map((_, idx) => (
                         <button
                           key={idx}
                           onClick={() => setCurrentHighlight(idx)}
                           className={`transition-all duration-300 ${
                             idx === currentHighlight 
-                              ? 'w-6 h-1.5 bg-volt-400' 
-                              : 'w-3 h-1.5 bg-white/30 hover:bg-white/50'
+                              ? 'w-4 sm:w-6 h-1 sm:h-1.5 bg-volt-400' 
+                              : 'w-2 sm:w-3 h-1 sm:h-1.5 bg-white/30 hover:bg-white/50'
                           } rounded-full`}
                         />
                       ))}
@@ -328,25 +328,25 @@ export default function HomePage() {
 
                 {/* Next Event Card */}
                 {heroEvent && (
-                  <div className="absolute -bottom-6 left-5 right-5 bg-pitch-900/95 backdrop-blur-xl border border-volt-400/20 rounded-sm p-5 shadow-2xl animate-slide-up z-30">
-                    <div className="flex items-center gap-2 mb-3">
-                      <Clock size={12} className="text-volt-400" />
-                      <span className="font-mono text-volt-400 text-xs uppercase tracking-widest font-semibold">
+                  <div className="absolute -bottom-6 left-3 right-3 sm:left-5 sm:right-5 bg-pitch-900/95 backdrop-blur-xl border border-volt-400/20 rounded-sm p-3 sm:p-5 shadow-2xl animate-slide-up z-30">
+                    <div className="flex items-center gap-2 mb-2 sm:mb-3">
+                      <Clock size={10} className="sm:w-3 sm:h-3 text-volt-400" />
+                      <span className="font-mono text-volt-400 text-[10px] sm:text-xs uppercase tracking-widest font-semibold">
                         Next Screening
                       </span>
                     </div>
 
-                    <p className="font-display font-black text-white text-lg mb-1">
+                    <p className="font-display font-black text-white text-sm sm:text-lg mb-1">
                       {heroEvent.match_teams || 'EPIC CLASH AWAITS'}
                     </p>
 
-                    <div className="flex items-center gap-3 text-slate-400 text-xs mb-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-slate-400 text-[10px] sm:text-xs mb-2 sm:mb-3">
                       <div className="flex items-center gap-1">
-                        <MapPin size={10} />
+                        <MapPin size={8} className="sm:w-2.5 sm:h-2.5" />
                         <span>Lagos Main Arena</span>
                       </div>
                       <div className="flex items-center gap-1">
-                        <Calendar size={10} />
+                        <Calendar size={8} className="sm:w-2.5 sm:h-2.5" />
                         <span>{heroEvent.starts_at ? format(new Date(heroEvent.starts_at), 'EEE, MMM dd') : 'Date TBA'}</span>
                       </div>
                     </div>
@@ -355,10 +355,10 @@ export default function HomePage() {
 
                     <Link
                       to={`/events/${heroEvent.id}`}
-                      className="btn-volt w-full justify-center mt-4 text-xs group"
+                      className="btn-volt w-full justify-center mt-3 sm:mt-4 text-[10px] sm:text-xs group"
                     >
                       Reserve Your Seat
-                      <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                      <ChevronRight size={10} className="sm:w-3 sm:h-3 group-hover:translate-x-0.5 transition-transform" />
                     </Link>
                   </div>
                 )}
@@ -376,26 +376,26 @@ export default function HomePage() {
       </section>
 
       {/* FEATURES SECTION */}
-      <section className="py-16 px-4 sm:px-6 border-y border-white/5">
+      <section className="py-12 sm:py-16 px-4 sm:px-6 border-y border-white/5">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="font-mono text-volt-400 text-xs uppercase tracking-widest">Premium Experience</span>
-            <h2 className="section-title text-3xl mt-2">Why Fans Choose Us</h2>
+          <div className="text-center mb-8 sm:mb-12">
+            <span className="font-mono text-volt-400 text-[10px] sm:text-xs uppercase tracking-widest">Premium Experience</span>
+            <h2 className="section-title text-2xl sm:text-3xl mt-2">Why Fans Choose Us</h2>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
             {features.map(({ icon: Icon, title, desc }, idx) => (
               <div
                 key={title}
                 className="text-center group animate-fade-in-up"
                 style={{ animationDelay: `${idx * 0.1}s` }}
               >
-                <div className="w-14 h-14 mx-auto mb-4 rounded-sm bg-volt-400/10 border border-volt-400/20 flex items-center justify-center group-hover:scale-110 transition-all duration-300 group-hover:bg-volt-400/20">
-                  <Icon size={24} className="text-volt-400" />
+                <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-3 sm:mb-4 rounded-sm bg-volt-400/10 border border-volt-400/20 flex items-center justify-center group-hover:scale-110 transition-all duration-300 group-hover:bg-volt-400/20">
+                  <Icon size={18} className="sm:w-6 sm:h-6 text-volt-400" />
                 </div>
-                <h3 className="font-display font-700 text-white text-sm uppercase tracking-wide mb-1">
+                <h3 className="font-display font-700 text-white text-xs sm:text-sm uppercase tracking-wide mb-1">
                   {title}
                 </h3>
-                <p className="text-slate-500 text-xs">{desc}</p>
+                <p className="text-slate-500 text-[10px] sm:text-xs">{desc}</p>
               </div>
             ))}
           </div>
@@ -403,40 +403,40 @@ export default function HomePage() {
       </section>
 
       {/* UPCOMING EVENTS - Enhanced */}
-      <section className="py-20 px-4 sm:px-6">
+      <section className="py-16 sm:py-20 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-12">
-            <div className="mb-4 md:mb-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8 sm:mb-12">
+            <div className="mb-4 sm:mb-0">
               <div className="flex items-center gap-2 mb-2">
-                <Zap size={14} className="text-volt-400" />
-                <span className="font-mono text-volt-400 text-xs uppercase tracking-widest font-semibold">
+                <Zap size={12} className="sm:w-3.5 sm:h-3.5 text-volt-400" />
+                <span className="font-mono text-volt-400 text-[10px] sm:text-xs uppercase tracking-widest font-semibold">
                   Don't Miss Out
                 </span>
               </div>
-              <h2 className="section-title text-4xl">This Week's Lineup</h2>
-              <p className="text-slate-500 text-sm mt-1">Book your spot before tickets run out</p>
+              <h2 className="section-title text-2xl sm:text-4xl">This Week's Lineup</h2>
+              <p className="text-slate-500 text-xs sm:text-sm mt-1">Book your spot before tickets run out</p>
             </div>
 
             <Link
               to="/events"
-              className="inline-flex items-center gap-2 text-volt-400 text-sm font-mono uppercase tracking-widest hover:gap-3 transition-all"
+              className="inline-flex items-center gap-2 text-volt-400 text-xs sm:text-sm font-mono uppercase tracking-widest hover:gap-3 transition-all"
             >
               View All Events
-              <ChevronRight size={14} />
+              <ChevronRight size={12} className="sm:w-3.5 sm:h-3.5" />
             </Link>
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}
-                  className="bg-pitch-800 rounded-sm h-80 animate-pulse"
+                  className="bg-pitch-800 rounded-sm h-64 sm:h-80 animate-pulse"
                 />
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {upcoming.map((event, idx) => (
                 <div
                   key={event.id}
@@ -452,41 +452,40 @@ export default function HomePage() {
       </section>
 
       {/* TESTIMONIALS SECTION */}
-      <section className="py-20 px-4 sm:px-6 bg-gradient-to-b from-pitch-950 to-pitch-900">
+      <section className="py-16 sm:py-20 px-4 sm:px-6 bg-gradient-to-b from-pitch-950 to-pitch-900">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <span className="font-mono text-volt-400 text-xs uppercase tracking-widest">Fan Love</span>
-            <h2 className="section-title text-3xl mt-2">What Our Fans Say</h2>
+          <div className="text-center mb-8 sm:mb-12">
+            <span className="font-mono text-volt-400 text-[10px] sm:text-xs uppercase tracking-widest">Fan Love</span>
+            <h2 className="section-title text-2xl sm:text-3xl mt-2">What Our Fans Say</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
             {testimonials.map((testimonial, idx) => (
               <div
                 key={idx}
-                className="bg-white/[0.03] border border-white/5 rounded-sm p-6 hover:border-volt-400/20 transition-all duration-300"
+                className="bg-white/[0.03] border border-white/5 rounded-sm p-4 sm:p-6 hover:border-volt-400/20 transition-all duration-300"
               >
-                <div className="flex gap-1 mb-4">
+                <div className="flex gap-1 mb-3 sm:mb-4">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      size={14}
-                      className="fill-volt-400 text-volt-400"
+                      size={12} className="sm:w-3.5 sm:h-3.5 fill-volt-400 text-volt-400"
                     />
                   ))}
                 </div>
-                <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mb-3 sm:mb-4">
                   "{testimonial.text}"
                 </p>
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-display font-700 text-white text-sm">
+                    <p className="font-display font-700 text-white text-xs sm:text-sm">
                       {testimonial.name}
                     </p>
-                    <p className="font-mono text-slate-500 text-[10px] uppercase tracking-widest">
+                    <p className="font-mono text-slate-500 text-[8px] sm:text-[10px] uppercase tracking-widest">
                       {testimonial.match}
                     </p>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-volt-400/10 border border-volt-400/20 flex items-center justify-center">
-                    <span className="text-volt-400 text-xs font-bold">★</span>
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-volt-400/10 border border-volt-400/20 flex items-center justify-center">
+                    <span className="text-volt-400 text-[10px] sm:text-xs font-bold">★</span>
                   </div>
                 </div>
               </div>
@@ -496,25 +495,25 @@ export default function HomePage() {
       </section>
 
       {/* CTA BANNER */}
-      <section className="py-16 px-4 sm:px-6">
+      <section className="py-12 sm:py-16 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="relative overflow-hidden rounded-sm bg-gradient-to-r from-volt-400/20 via-volt-400/10 to-transparent border border-volt-400/20 p-8 md:p-12">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-volt-400/5 rounded-full blur-3xl" />
-            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-              <div>
-                <h3 className="font-display font-900 text-white text-2xl md:text-3xl uppercase mb-2">
+          <div className="relative overflow-hidden rounded-sm bg-gradient-to-r from-volt-400/20 via-volt-400/10 to-transparent border border-volt-400/20 p-6 sm:p-8 md:p-12">
+            <div className="absolute top-0 right-0 w-40 h-40 sm:w-64 sm:h-64 bg-volt-400/5 rounded-full blur-3xl" />
+            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4 sm:gap-6">
+              <div className="text-center md:text-left">
+                <h3 className="font-display font-900 text-white text-xl sm:text-2xl md:text-3xl uppercase mb-2">
                   Ready for Matchday?
                 </h3>
-                <p className="text-slate-400 text-sm">
+                <p className="text-slate-400 text-xs sm:text-sm">
                   Join thousands of fans experiencing football like never before.
                 </p>
               </div>
               <Link
                 to="/register"
-                className="btn-volt text-sm px-8 py-4 whitespace-nowrap group"
+                className="btn-volt text-xs sm:text-sm px-6 sm:px-8 py-3 sm:py-4 whitespace-nowrap group"
               >
                 Get Your Ticket Now
-                <ArrowRight size={14} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight size={12} className="sm:w-3.5 sm:h-3.5 ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>

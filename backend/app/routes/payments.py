@@ -5,8 +5,8 @@ import json
 from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app import db
-from app.models import Booking, Ticket, Seat, SeatHold, EventSection, User
+from backend.app import db
+from backend.app.models import Booking, Ticket, Seat, SeatHold, EventSection, User
 
 payments_bp = Blueprint("payments", __name__)
 

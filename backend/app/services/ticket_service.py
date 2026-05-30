@@ -5,7 +5,7 @@ import json
 import base64
 from io import BytesIO
 import qrcode
-from app.models import Ticket
+from backend.app.models import Ticket
 
 
 HMAC_SECRET = os.getenv("HMAC_SECRET", "ticket-hmac-secret-change-me")
