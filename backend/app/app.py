@@ -17,6 +17,7 @@ mail = Mail()
 
 def create_app(config_name=None):
     app = Flask(__name__)
+    app = create_app()
 
     # ── Config ──────────────────────────────────────────────────
     app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv(
