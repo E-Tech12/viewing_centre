@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
 from sqlalchemy import func
-from backend.app import db
+from app import db
 from app.models import User, Event, Booking, Ticket, Venue, Section
 
 admin_bp = Blueprint("admin", __name__)

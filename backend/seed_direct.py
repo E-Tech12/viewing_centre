@@ -1,4 +1,4 @@
-from backend.app import create_app, db
+from app import create_app, db
 from werkzeug.security import generate_password_hash
 
 app = create_app()
