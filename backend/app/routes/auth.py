@@ -8,7 +8,7 @@ from flask_jwt_extended import (
 
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from app import db
+from app.extensions import db
 from app.models import User
 
 auth_bp = Blueprint("auth", __name__)
@@ -30,36 +30,44 @@ def check_password(password: str, hashed: str) -> bool:
 # -------------------------
 @auth_bp.post("/register")
 def register():
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    required = ["email", "password", "full_name"]
-    missing = [f for f in required if not data.get(f)]
-    if missing:
-        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+        required = ["email", "password", "full_name"]
+        missing = [f for f in required if not data.get(f)]
+        if missing:
+            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
 
-    if User.query.filter_by(email=data["email"].lower()).first():
-        return jsonify({"error": "Email already registered"}), 409
+        if User.query.filter_by(email=data["email"].lower()).first():
+            return jsonify({"error": "Email already registered"}), 409
 
-    user = User(
-        email=data["email"].lower(),
-        password_hash=hash_password(data["password"]),
-        full_name=data["full_name"],
-        phone=data.get("phone"),
-        role="user",
-    )
+        user = User(
+            email=data["email"].lower(),
+            password_hash=hash_password(data["password"]),
+            full_name=data["full_name"],
+            phone=data.get("phone"),
+            role="user",
+        )
 
-    db.session.add(user)
-    db.session.commit()
+        db.session.add(user)
+        db.session.commit()
 
-    access_token = create_access_token(identity=user.id, additional_claims={"role": user.role})
-    refresh_token = create_refresh_token(identity=user.id)
+        access_token = create_access_token(
+            identity=user.id,
+            additional_claims={"role": user.role}
+        )
+        refresh_token = create_refresh_token(identity=user.id)
 
-    return jsonify({
-        "user": user.to_dict(),
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-    }), 201
+        return jsonify({
+            "user": user.to_dict(),
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+        }), 201
 
+    except Exception as e:
+        db.session.rollback()
+        print("🔥 REGISTER ERROR:", str(e))
+        return jsonify({"error": "Registration failed"}), 500
 
 # -------------------------
 # LOGIN
