@@ -6,10 +6,11 @@ from flask_jwt_extended import JWTManager
 from flask_cors import CORS
 from flask_mail import Mail
 from dotenv import load_dotenv
-
+from app.extensions import db, migrate, jwt, mail
+from app.extensions import db,migrate,jwt,mail
 load_dotenv()
 
-db = SQLAlchemy()
+
 migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
@@ -47,14 +48,14 @@ def create_app(config_name=None):
     CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
     # ── Blueprints ───────────────────────────────────────────────
-    from backend.app.routes.auth import auth_bp
-    from backend.app.routes.events import events_bp
-    from backend.app.routes.seats_backend import seats_bp
-    from backend.app.routes.bookings import bookings_bp
-    from backend.app.routes.tickets import tickets_bp
-    from backend.app.routes.payments import payments_bp
-    from backend.app.routes.admin import admin_bp
-    from backend.app.routes.sse import sse_bp
+    from app.routes.auth import auth_bp
+    from app.routes.events import events_bp
+    from app.routes.seats_backend import seats_bp
+    from app.routes.bookings import bookings_bp
+    from app.routes.tickets import tickets_bp
+    from app.routes.payments import payments_bp
+    from app.routes.admin import admin_bp
+    from app.routes.sse import sse_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(events_bp, url_prefix="/api/events")

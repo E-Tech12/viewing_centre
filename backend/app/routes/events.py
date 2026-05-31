@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
-from backend.app import db
-from backend.app.models import Event, Venue, EventSection, Section
+from app import db
+from app.models import Event, Venue, EventSection, Section
 
 events_bp = Blueprint("events", __name__)
 
