@@ -14,7 +14,7 @@ migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
 
-git remote add origin https://github.com/E-Tech12/viewing_centre.git
+
 
 def create_app(config_name=None):
     app = Flask(__name__)
