@@ -1,126 +1,144 @@
+"""python seed_direct.py — seeds platform admin, sport categories, demo tenant."""
+from decimal import Decimal
 from app import create_app, db
-from werkzeug.security import generate_password_hash
 
 app = create_app()
 
+SPORTS = [
+    {
+        "name": "Football", "slug": "football", "icon": "⚽", "sort_order": 1,
+        "metadata_schema": [
+            {"key": "home_team",   "label": "Home Team",   "required": True},
+            {"key": "away_team",   "label": "Away Team",   "required": True},
+            {"key": "competition", "label": "Competition", "required": False},
+            {"key": "stadium",     "label": "Stadium",     "required": False},
+        ],
+    },
+    {
+        "name": "Basketball", "slug": "basketball", "icon": "🏀", "sort_order": 2,
+        "metadata_schema": [
+            {"key": "home_team", "label": "Home Team", "required": True},
+            {"key": "away_team", "label": "Away Team", "required": True},
+            {"key": "league",    "label": "League",    "required": False},
+            {"key": "arena",     "label": "Arena",     "required": False},
+        ],
+    },
+    {
+        "name": "Tennis", "slug": "tennis", "icon": "🎾", "sort_order": 3,
+        "metadata_schema": [
+            {"key": "player_one", "label": "Player One",  "required": True},
+            {"key": "player_two", "label": "Player Two",  "required": True},
+            {"key": "tournament", "label": "Tournament",  "required": False},
+            {"key": "court",      "label": "Court",       "required": False},
+        ],
+    },
+    {
+        "name": "Boxing", "slug": "boxing", "icon": "🥊", "sort_order": 4,
+        "metadata_schema": [
+            {"key": "fighter_one",  "label": "Fighter One",  "required": True},
+            {"key": "fighter_two",  "label": "Fighter Two",  "required": True},
+            {"key": "weight_class", "label": "Weight Class", "required": False},
+            {"key": "event_name",   "label": "Event Name",   "required": False},
+        ],
+    },
+    {
+        "name": "UFC / MMA", "slug": "mma", "icon": "🏟️", "sort_order": 5,
+        "metadata_schema": [
+            {"key": "fighter_one",  "label": "Fighter One",  "required": True},
+            {"key": "fighter_two",  "label": "Fighter Two",  "required": True},
+            {"key": "weight_class", "label": "Weight Class", "required": False},
+            {"key": "event_name",   "label": "Event Name",   "required": False},
+        ],
+    },
+    {
+        "name": "Formula 1", "slug": "f1", "icon": "🏎️", "sort_order": 6,
+        "metadata_schema": [
+            {"key": "grand_prix",        "label": "Grand Prix",        "required": True},
+            {"key": "circuit",           "label": "Circuit",           "required": True},
+            {"key": "featured_drivers",  "label": "Featured Drivers",  "required": False},
+        ],
+    },
+]
+
 with app.app_context():
-    from app.models import Venue, Section, Seat, User
+    from app.models.models import User, Tenant, SportCategory, Venue
+    from werkzeug.security import generate_password_hash
 
-    def hash_password(password):
-        return generate_password_hash(password)
+    def hashpw(p):
+        return generate_password_hash(p)
 
-    print("Starting seed...")
+    print("=" * 50)
+    print("SportZone SaaS — Database Seed")
+    print("=" * 50)
 
-    # ── Admin user ────────────────────────────────────────────
-    existing_admin = User.query.filter_by(email="admin@sportzone.ng").first()
-
-    if not existing_admin:
-        admin = User(
-            email="admin@sportzone.ng",
-            password_hash=hash_password("Admin1234"),
-            full_name="SportZone Admin",
-            role="admin",
-        )
-
+    # Platform admin
+    admin = User.query.filter_by(email="admin@sportzone.ng").first()
+    if not admin:
+        admin = User(email="admin@sportzone.ng", password_hash=hashpw("Admin1234"),
+                     full_name="Platform Admin", role="platform_admin")
         db.session.add(admin)
         db.session.commit()
-
-        print("✓ Admin user created")
-        print("  Email:    admin@sportzone.ng")
-        print("  Password: Admin1234")
-
+        print("✓ Platform admin created")
     else:
-        # Reset password if admin already exists
-        existing_admin.password_hash = hash_password("Admin1234")
-
+        admin.password_hash = hashpw("Admin1234")
+        admin.role = "platform_admin"
         db.session.commit()
+        print("✓ Platform admin updated (password reset to Admin1234)")
 
-        print("✓ Admin user already exists — password reset to: Admin1234")
+    # Sport categories
+    for sp in SPORTS:
+        existing = SportCategory.query.filter_by(slug=sp["slug"]).first()
+        if not existing:
+            s = SportCategory(**sp)
+            db.session.add(s)
+            print(f"  {sp['icon']} {sp['name']} added")
+    db.session.commit()
+    print("✓ Sport categories seeded")
 
-    # ── Venue + sections + seats ──────────────────────────────
-    if not Venue.query.first():
-
-        venue = Venue(
-            name="SportZone Lagos",
-            location="Victoria Island, Lagos",
-            address="12 Adeola Odeku St, Victoria Island, Lagos",
-            total_capacity=150,
-        )
-
-        db.session.add(venue)
+    # Demo event owner + tenant (for testing)
+    demo = User.query.filter_by(email="owner@sportzone.ng").first()
+    if not demo:
+        demo = User(email="owner@sportzone.ng", password_hash=hashpw("Owner1234"),
+                    full_name="Demo Event Owner", role="event_owner")
+        db.session.add(demo)
         db.session.flush()
 
-        sections_config = [
-            {
-                "name": "VIP Lounge",
-                "category": "VIP",
-                "rows": 3,
-                "per_row": 10,
-                "color": "#F59E0B",
-            },
-            {
-                "name": "Regular Floor",
-                "category": "Regular",
-                "rows": 8,
-                "per_row": 10,
-                "color": "#3B82F6",
-            },
-            {
-                "name": "Gaming Zone",
-                "category": "Gaming",
-                "rows": 2,
-                "per_row": 5,
-                "color": "#8B5CF6",
-            },
-        ]
+        tenant = Tenant(
+            owner_id=demo.id,
+            business_name="SportZone Lagos",
+            slug="sportzone-lagos",
+            description="Premier sports viewing centre in Victoria Island",
+            city="Lagos", state="Lagos", country="Nigeria",
+            phone="08012345678",
+            status="active",
+            platform_fee_pct=Decimal("5.00"),
+        )
+        db.session.add(tenant)
+        db.session.flush()
 
-        row_letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        total_seats = 0
-
-        for sec_cfg in sections_config:
-
-            section = Section(
-                venue_id=venue.id,
-                name=sec_cfg["name"],
-                category=sec_cfg["category"],
-                capacity=sec_cfg["rows"] * sec_cfg["per_row"],
-                color_hex=sec_cfg["color"],
-                row_count=sec_cfg["rows"],
-                seats_per_row=sec_cfg["per_row"],
-            )
-
-            db.session.add(section)
-            db.session.flush()
-
-            for r in range(sec_cfg["rows"]):
-                for s in range(sec_cfg["per_row"]):
-
-                    seat = Seat(
-                        section_id=section.id,
-                        row_label=row_letters[r],
-                        seat_number=s + 1,
-                        pos_x=s * 42 + 20,
-                        pos_y=r * 42 + 20,
-                    )
-
-                    db.session.add(seat)
-                    total_seats += 1
-
+        venue = Venue(
+            tenant_id=tenant.id,
+            name="SportZone VI",
+            address="12 Adeola Odeku St",
+            city="Victoria Island",
+            state="Lagos",
+            total_capacity=200,
+        )
+        db.session.add(venue)
         db.session.commit()
-
-        print(f"✓ Venue created: {venue.name}")
-        print("  Sections: VIP Lounge (30), Regular Floor (80), Gaming Zone (10)")
-        print(f"  Total seats: {total_seats}")
-
+        print("✓ Demo event owner created: owner@sportzone.ng / Owner1234")
+        print(f"  Tenant: SportZone Lagos (slug: sportzone-lagos)")
+        print(f"  Venue:  SportZone VI, Victoria Island")
     else:
-        v = Venue.query.first()
-        seat_count = Seat.query.count()
+        print("✓ Demo owner already exists")
 
-        print(f"✓ Venue already exists: {v.name} ({seat_count} seats)")
-
-    print("\nSeed complete!")
-    print("  1. Log in to admin at /login")
-    print("     Email:    admin@sportzone.ng")
-    print("     Password: Admin1234")
-    print("  2. Go to /admin/events and create an event")
-    print("  3. Set ticket prices for each section")
+    print()
+    print("Credentials:")
+    print("  Platform Admin: admin@sportzone.ng  / Admin1234")
+    print("  Event Owner:    owner@sportzone.ng  / Owner1234")
+    print()
+    print("Next steps:")
+    print("  1. flask db migrate -m 'saas evolution'")
+    print("  2. flask db upgrade")
+    print("  3. python seed_direct.py")
+    print("  4. Start building events from the owner dashboard")

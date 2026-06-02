@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
-import { ticketsApi } from '../../services/api'
+import { bookingsApi } from '../../services/api'
 import { format } from 'date-fns'
-import { Ticket, MapPin, Calendar, QrCode, CheckCircle } from 'lucide-react'
+import { Ticket, MapPin, Calendar, QrCode, CheckCircle, ChevronDown } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function MyTicketsPage() {
-  const [tickets, setTickets] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [activeQr, setActiveQr] = useState(null)
+  const [bookings, setBookings] = useState([])
+  const [loading,  setLoading]  = useState(true)
+  const [openIds,  setOpenIds]  = useState({}) // booking_id -> bool
+  const [showQr,   setShowQr]   = useState(null)
 
   useEffect(() => {
-    ticketsApi.myTickets()
-      .then(({ data }) => setTickets(data))
-      .finally(() => setLoading(false))
+    bookingsApi.mine().then(({ data }) => setBookings(data)).finally(() => setLoading(false))
   }, [])
+
+  const toggle = (id) => setOpenIds(prev => ({ ...prev, [id]: !prev[id] }))
 
   if (loading) return (
     <div className="min-h-screen pt-24 flex items-center justify-center">
@@ -22,72 +24,112 @@ export default function MyTicketsPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-16">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6">
         <div className="flex items-center gap-3 mb-10">
           <Ticket size={20} className="text-volt-400" />
-          <h1 className="font-display font-900 text-white text-3xl uppercase tracking-wide">My Tickets</h1>
+          <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide">My Tickets</h1>
         </div>
 
-        {tickets.length === 0 ? (
+        {bookings.length === 0 ? (
           <div className="text-center py-24">
             <Ticket size={48} className="text-slate-700 mx-auto mb-4" />
-            <p className="font-display font-700 text-slate-500 text-xl uppercase tracking-wide mb-2">No Tickets Yet</p>
+            <p className="font-display font-bold text-slate-500 text-xl uppercase tracking-wide mb-2">No Tickets Yet</p>
             <p className="text-slate-600 font-body text-sm mb-6">Book your first event to see tickets here.</p>
-            <a href="/events" className="btn-volt">Browse Events</a>
+            <Link to="/events" className="btn-volt">Browse Events</Link>
           </div>
         ) : (
           <div className="space-y-4">
-            {tickets.map(ticket => (
-              <div key={ticket.id} className={`bg-pitch-800 border rounded-sm overflow-hidden transition-all ${ticket.scanned ? 'border-white/5 opacity-70' : 'border-white/10 hover:border-volt-400/20'}`}>
-                <div className="flex flex-col sm:flex-row">
-                  {/* Left: ticket info */}
-                  <div className="flex-1 p-5">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="font-display font-800 text-white uppercase tracking-wide">{ticket.match_teams || ticket.event_title}</p>
-                        <p className="font-mono text-volt-400 text-xs uppercase tracking-widest">Seat {ticket.seat_label}</p>
+            {bookings.map(booking => (
+              <div key={booking.id}
+                className="bg-pitch-800 border border-white/10 rounded-sm overflow-hidden">
+
+                {/* Booking header */}
+                <button
+                  onClick={() => toggle(booking.id)}
+                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/2 transition-colors"
+                >
+                  <div className="flex items-start gap-3 text-left">
+                    <span className="text-2xl mt-0.5">{booking.sport_icon || '🏆'}</span>
+                    <div>
+                      <p className="font-display font-bold text-white uppercase tracking-wide text-sm">
+                        {booking.event_title}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-3 mt-1">
+                        {booking.event_starts_at && (
+                          <span className="flex items-center gap-1 font-mono text-slate-500 text-[10px]">
+                            <Calendar size={9} /> {format(new Date(booking.event_starts_at), 'EEE dd MMM · HH:mm')}
+                          </span>
+                        )}
+                        {booking.venue_name && (
+                          <span className="flex items-center gap-1 font-mono text-slate-500 text-[10px]">
+                            <MapPin size={9} /> {booking.venue_name}
+                          </span>
+                        )}
                       </div>
-                      {ticket.scanned && (
-                        <span className="label-tag bg-green-500/10 text-green-400 border border-green-400/20 flex items-center gap-1">
-                          <CheckCircle size={10} /> Scanned
-                        </span>
-                      )}
                     </div>
-                    <div className="flex flex-wrap gap-4 text-xs">
-                      <div className="flex items-center gap-1.5 text-slate-500">
-                        <Calendar size={10} />
-                        <span className="font-mono">{ticket.event_starts_at ? format(new Date(ticket.event_starts_at), 'EEE dd MMM · HH:mm') : '—'}</span>
-                      </div>
-                      {ticket.venue_name && (
-                        <div className="flex items-center gap-1.5 text-slate-500">
-                          <MapPin size={10} />
-                          <span className="font-mono">{ticket.venue_name}</span>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0 ml-3">
+                    <div className="text-right">
+                      <p className="font-mono text-volt-400 text-sm font-bold">
+                        {booking.ticket_count} ticket{booking.ticket_count !== 1 ? 's' : ''}
+                      </p>
+                      <p className="font-mono text-slate-600 text-[10px]">
+                        ₦{booking.amount_paid.toLocaleString()}
+                      </p>
+                    </div>
+                    <ChevronDown size={14} className={`text-slate-500 transition-transform ${openIds[booking.id] ? 'rotate-180' : ''}`} />
+                  </div>
+                </button>
+
+                {/* Tickets expanded */}
+                {openIds[booking.id] && (
+                  <div className="border-t border-white/5 animate-fade-in">
+                    {(booking.tickets || []).map((ticket, i) => (
+                      <div key={ticket.id} className="border-b border-white/5 last:border-b-0">
+                        <div className="flex items-center justify-between px-5 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 bg-volt-400/10 border border-volt-400/20 rounded-sm flex items-center justify-center">
+                              <span className="font-mono text-volt-400 text-[10px] font-bold">{i + 1}</span>
+                            </div>
+                            <div>
+                              <p className="font-display font-bold text-white text-sm uppercase tracking-wide">
+                                {ticket.category_name}
+                              </p>
+                              {ticket.status === 'used' && (
+                                <span className="flex items-center gap-1 font-mono text-green-400 text-[10px]">
+                                  <CheckCircle size={9} /> Used
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => setShowQr(showQr === ticket.id ? null : ticket.id)}
+                            className={`flex items-center gap-1.5 transition-colors ${
+                              ticket.status === 'used'
+                                ? 'text-slate-600 cursor-default'
+                                : 'text-volt-400 hover:text-volt-300'
+                            }`}
+                            disabled={ticket.status === 'used'}
+                          >
+                            <QrCode size={16} />
+                            <span className="font-mono text-[10px] uppercase tracking-widest hidden sm:inline">
+                              {showQr === ticket.id ? 'Hide QR' : 'Show QR'}
+                            </span>
+                          </button>
                         </div>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Right: QR button */}
-                  <div className="border-t sm:border-t-0 sm:border-l border-white/5 p-5 flex items-center justify-center sm:w-32">
-                    <button
-                      onClick={() => setActiveQr(activeQr === ticket.id ? null : ticket.id)}
-                      className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-volt-400 transition-colors"
-                    >
-                      <QrCode size={28} />
-                      <span className="font-mono text-[10px] uppercase tracking-widest">Show QR</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* QR Code expanded */}
-                {activeQr === ticket.id && (
-                  <div className="border-t border-white/5 p-6 flex flex-col items-center gap-3 bg-white animate-fade-in">
-                    <img
-                      src={`data:image/png;base64,${ticket.qr_payload}`}
-                      alt="QR Code"
-                      className="w-48 h-48"
-                    />
-                    <p className="font-mono text-pitch-700 text-xs">Present this at the entrance</p>
+                        {showQr === ticket.id && (
+                          <div className="border-t border-white/5 p-6 bg-white flex flex-col items-center gap-3 animate-fade-in">
+                            <img
+                              src={`data:image/png;base64,${ticket.qr_payload}`}
+                              alt="QR Code"
+                              className="w-48 h-48"
+                            />
+                            <p className="font-mono text-pitch-700 text-xs">Present at entrance · Do not share</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>

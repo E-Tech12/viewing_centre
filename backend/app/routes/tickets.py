@@ -2,7 +2,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app import db
-from app.models import Ticket, Booking
+from app.models.models import Ticket, Booking
 from app.services.ticket_service import validate_ticket
 
 tickets_bp = Blueprint("tickets", __name__)

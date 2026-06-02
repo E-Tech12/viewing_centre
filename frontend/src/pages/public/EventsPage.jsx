@@ -1,32 +1,29 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
-import { eventsApi } from '../../services/api'
+import { eventsApi, sportsApi } from '../../services/api'
 import EventCard from '../../components/ui/EventCard'
-
-const CATEGORIES = ['all', 'football', 'gaming', 'entertainment']
-const STATUSES = ['upcoming', 'live', 'ended']
 
 export default function EventsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const [events, setEvents] = useState([])
+  const [events,  setEvents]  = useState([])
+  const [sports,  setSports]  = useState([])
   const [loading, setLoading] = useState(true)
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const [total,   setTotal]   = useState(0)
+  const [page,    setPage]    = useState(1)
 
-  const category = searchParams.get('category') || 'all'
+  const sport  = searchParams.get('sport')  || 'all'
   const status = searchParams.get('status') || 'upcoming'
-  const [search, setSearch] = useState('')
+
+  useEffect(() => { sportsApi.list().then(({ data }) => setSports(data)) }, [])
 
   useEffect(() => {
     setLoading(true)
     const params = { page, per_page: 9, status }
-    if (category !== 'all') params.category = category
-
+    if (sport !== 'all') params.sport = sport
     eventsApi.list(params)
       .then(({ data }) => { setEvents(data.events); setTotal(data.total) })
       .finally(() => setLoading(false))
-  }, [category, status, page])
+  }, [sport, status, page])
 
   const setFilter = (key, val) => {
     setSearchParams(prev => { prev.set(key, val); return prev })
@@ -35,10 +32,9 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen pt-24 pb-20">
-      {/* Header */}
       <div className="border-b border-white/5 pb-8 mb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <h1 className="font-display font-900 text-white text-4xl uppercase tracking-wide mb-1">Events</h1>
+          <h1 className="font-display font-extrabold text-white text-4xl uppercase tracking-wide mb-1">Events</h1>
           <p className="text-slate-500 font-body text-sm">{total} events available</p>
         </div>
       </div>
@@ -46,24 +42,32 @@ export default function EventsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 mb-8">
-          {/* Category */}
-          <div className="flex items-center gap-1 bg-pitch-800 border border-white/5 rounded-sm p-1">
-            {CATEGORIES.map(c => (
+          {/* Sport filter */}
+          <div className="flex items-center gap-1 bg-pitch-800 border border-white/5 rounded-sm p-1 flex-wrap">
+            <button
+              onClick={() => setFilter('sport', 'all')}
+              className={`px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
+                sport === 'all' ? 'bg-volt-400 text-pitch-950' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              All
+            </button>
+            {sports.map(s => (
               <button
-                key={c}
-                onClick={() => setFilter('category', c)}
-                className={`px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
-                  category === c ? 'bg-volt-400 text-pitch-950' : 'text-slate-400 hover:text-white'
+                key={s.slug}
+                onClick={() => setFilter('sport', s.slug)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
+                  sport === s.slug ? 'bg-volt-400 text-pitch-950' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                {c}
+                <span>{s.icon}</span> {s.name}
               </button>
             ))}
           </div>
 
-          {/* Status */}
+          {/* Status filter */}
           <div className="flex items-center gap-1 bg-pitch-800 border border-white/5 rounded-sm p-1">
-            {STATUSES.map(s => (
+            {['upcoming', 'live', 'ended'].map(s => (
               <button
                 key={s}
                 onClick={() => setFilter('status', s)}
@@ -87,7 +91,7 @@ export default function EventsPage() {
         ) : events.length === 0 ? (
           <div className="text-center py-24">
             <span className="text-6xl mb-4 block opacity-20">📭</span>
-            <p className="font-display font-700 text-slate-500 text-xl uppercase tracking-wide">No events found</p>
+            <p className="font-display font-bold text-slate-500 text-xl uppercase tracking-wide">No events found</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -95,7 +99,6 @@ export default function EventsPage() {
           </div>
         )}
 
-        {/* Pagination */}
         {total > 9 && (
           <div className="flex justify-center items-center gap-2 mt-12">
             <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-ghost disabled:opacity-30">← Prev</button>

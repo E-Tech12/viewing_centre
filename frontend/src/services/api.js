@@ -41,53 +41,67 @@ api.interceptors.response.use(
 
 export default api
 
-// ── Auth ──────────────────────────────────────────────────────
+// ── Auth ──────────────────────────────────────────────────────────
 export const authApi = {
-  register: (d) => api.post('/auth/register', d),
-  login: (d) => api.post('/auth/login', d),
-  me: () => api.get('/auth/me'),
-  updateMe: (d) => api.patch('/auth/me', d),
+  register:  (d) => api.post('/auth/register', d),
+  login:     (d) => api.post('/auth/login', d),
+  refresh:   ()  => api.post('/auth/refresh'),
+  me:        ()  => api.get('/auth/me'),
+  updateMe:  (d) => api.patch('/auth/me', d),
 }
 
-// ── Events ────────────────────────────────────────────────────
+// ── Sports categories ─────────────────────────────────────────────
+export const sportsApi = {
+  list: () => api.get('/sports/'),
+  get:  (id) => api.get(`/sports/${id}`),
+}
+
+// ── Events (public discovery) ────────────────────────────────────
 export const eventsApi = {
-  list: (params) => api.get('/events/', { params }),
-  get: (id) => api.get(`/events/${id}`),
-  create: (d) => api.post('/events/', d),
-  update: (id, d) => api.patch(`/events/${id}`, d),
-  delete: (id) => api.delete(`/events/${id}`),
-  getVenues: () => api.get('/admin/venues'),
+  list:   (params) => api.get('/events/', { params }),
+  get:    (id)     => api.get(`/events/${id}`),
 }
 
-// ── Seats ─────────────────────────────────────────────────────
-export const seatsApi = {
-  getSeatMap: (eventId) => api.get(`/seats/event/${eventId}`),
-  hold: (eventId, seatIds) => api.post('/seats/hold', { event_id: eventId, seat_ids: seatIds }),
-  release: (eventId, seatIds) => api.delete('/seats/hold', { data: { event_id: eventId, seat_ids: seatIds } }),
+// ── Event Owner APIs ─────────────────────────────────────────────
+export const ownerApi = {
+  // Tenant
+  registerTenant: (d)  => api.post('/tenants/register', d),
+  myTenant:       ()   => api.get('/tenants/me'),
+  updateTenant:   (d)  => api.patch('/tenants/me', d),
+
+  // Venues
+  myVenues:      ()         => api.get('/tenants/me/venues'),
+  createVenue:   (d)        => api.post('/tenants/me/venues', d),
+  updateVenue:   (id, d)    => api.patch(`/tenants/me/venues/${id}`, d),
+
+  // Events
+  myEvents:      (params)   => api.get('/events/owner/mine', { params }),
+  createEvent:   (d)        => api.post('/events/owner/create', d),
+  updateEvent:   (id, d)    => api.patch(`/events/owner/${id}`, d),
+  deleteEvent:   (id)       => api.delete(`/events/owner/${id}`),
+
+  // Analytics
+  analytics:     ()         => api.get('/bookings/owner/analytics'),
+  bookings:      (params)   => api.get('/bookings/owner/bookings', { params }),
+
+  // Scanner
+  scanTicket:    (qr_data)  => api.post('/bookings/scan', { qr_data }),
 }
 
-// ── Payments ──────────────────────────────────────────────────
-export const paymentsApi = {
-  initialize: (d) => api.post('/payments/initialize', d),
-  verify: (ref) => api.get(`/payments/verify/${ref}`),
-}
-
-// ── Bookings ──────────────────────────────────────────────────
+// ── User booking ─────────────────────────────────────────────────
 export const bookingsApi = {
-  list: () => api.get('/bookings/'),
-  get: (id) => api.get(`/bookings/${id}`),
+  initialize: (d)    => api.post('/bookings/initialize', d),
+  verify:     (ref)  => api.get(`/bookings/verify/${ref}`),
+  mine:       ()     => api.get('/bookings/mine'),
 }
 
-// ── Tickets ───────────────────────────────────────────────────
-export const ticketsApi = {
-  myTickets: () => api.get('/tickets/my'),
-  scan: (qrData) => api.post('/tickets/scan', { qr_data: qrData }),
-}
-
-// ── Admin ─────────────────────────────────────────────────────
-export const adminApi = {
-  stats: () => api.get('/admin/stats'),
-  users: (params) => api.get('/admin/users', { params }),
-  setRole: (userId, role) => api.patch(`/admin/users/${userId}/role`, { role }),
-  attendance: (eventId) => api.get(`/admin/attendance/${eventId}`),
+// ── Platform Admin ────────────────────────────────────────────────
+export const platformApi = {
+  tenants:       (params)    => api.get('/tenants/', { params }),
+  approveTenant: (id)        => api.post(`/tenants/${id}/approve`),
+  suspendTenant: (id)        => api.post(`/tenants/${id}/suspend`),
+  analytics:     ()          => api.get('/bookings/admin/analytics'),
+  users:         (params)    => api.get('/admin/users', { params }),
+  setRole:       (id, role)  => api.patch(`/admin/users/${id}/role`, { role }),
+  allEvents:     (params)    => api.get('/events/admin/all', { params }),
 }

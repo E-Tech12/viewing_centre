@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
-from app.models import Booking, Ticket, Seat, SeatHold, EventSection, User
+from app.models.models import Booking, Ticket, Seat, SeatHold,Section, User
 
 payments_bp = Blueprint("payments", __name__)
 
@@ -31,7 +31,7 @@ def calculate_total(seat_ids, event_id):
         seat = Seat.query.get(seat_id)
         if not seat:
             continue
-        es = EventSection.query.filter_by(
+        es = Section.query.filter_by(
             event_id=event_id, section_id=seat.section_id
         ).first()
         total += float(es.price) if es else 0
@@ -250,7 +250,7 @@ def _confirm_booking(booking, ps_data):
         # Decrement available count
         seat = Seat.query.get(seat_id)
         if seat:
-            es = EventSection.query.filter_by(
+            es = Section.query.filter_by(
                 event_id=event_id, section_id=seat.section_id
             ).first()
             if es and es.available_count > 0:

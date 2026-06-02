@@ -7,7 +7,6 @@ from flask_cors import CORS
 from flask_mail import Mail
 from dotenv import load_dotenv
 from app.extensions import db, migrate, jwt, mail
-from app.extensions import db,migrate,jwt,mail
 load_dotenv()
 
 
@@ -15,12 +14,12 @@ migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
 
+git remote add origin https://github.com/E-Tech12/viewing_centre.git
 
 def create_app(config_name=None):
     app = Flask(__name__)
 
     db_url = os.getenv("DATABASE_URL")
-
     if not db_url:
         raise ValueError("DATABASE_URL is not set")
 
@@ -56,7 +55,13 @@ def create_app(config_name=None):
     from app.routes.payments import payments_bp
     from app.routes.admin import admin_bp
     from app.routes.sse import sse_bp
+    from app.routes.tenants import tenants_bp
+    from app.routes.sports import sports_bp
 
+
+
+    app.register_blueprint(tenants_bp, url_prefix="/api/tenants")
+    app.register_blueprint(sports_bp, url_prefix="/api/sports")
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(events_bp, url_prefix="/api/events")
     app.register_blueprint(seats_bp, url_prefix="/api/seats")

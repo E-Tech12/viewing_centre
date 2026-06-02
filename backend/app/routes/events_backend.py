@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
 from app import db
-from app.models import Event, Venue, EventSection, Section
+from app.models.models import Event, Venue, Section
 
 events_bp = Blueprint("events", __name__)
 
@@ -75,7 +75,7 @@ def create_event():
     for sec_data in data.get("sections", []):
         section = Section.query.get(sec_data["section_id"])
         if section:
-            es = EventSection(
+            es = Section(
                 event_id=event.id,
                 section_id=sec_data["section_id"],
                 price=sec_data["price"],
@@ -106,11 +106,11 @@ def update_event(event_id):
         event.starts_at = datetime.fromisoformat(data["starts_at"])
 
     if "sections" in data:
-        EventSection.query.filter_by(event_id=event.id).delete()
+        Section.query.filter_by(event_id=event.id).delete()
         for sec_data in data["sections"]:
             section = Section.query.get(sec_data["section_id"])
             if section:
-                es = EventSection(
+                es = Section(
                     event_id=event.id,
                     section_id=sec_data["section_id"],
                     price=sec_data["price"],
