@@ -1,88 +1,173 @@
 import { useState, useEffect } from 'react'
+import { Check, X, Users, Ticket, DollarSign, CheckCircle, BarChart3 } from 'lucide-react'
 import { adminApi } from '../../services/api'
-import { Users, Ticket, DollarSign, TrendingUp, BarChart3, CheckCircle } from 'lucide-react'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null)
+  const [tenants, setTenants] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    adminApi.stats()
-      .then(({ data }) => setStats(data))
+    Promise.all([
+      adminApi.stats(),
+      adminApi.pendingTenants()
+    ])
+      .then(([statsRes, tenantRes]) => {
+        setStats(statsRes.data)
+        setTenants(tenantRes.data)
+      })
+      .catch(err => {
+        console.error("Admin dashboard error:", err)
+      })
       .finally(() => setLoading(false))
   }, [])
 
-  const cards = stats ? [
-    { label: 'Total Users', value: stats.total_users.toLocaleString(), icon: Users, color: 'volt' },
-    { label: 'Confirmed Bookings', value: stats.total_bookings.toLocaleString(), icon: Ticket, color: 'ice' },
-    { label: 'Tickets Scanned', value: `${stats.tickets_scanned}/${stats.total_tickets}`, icon: CheckCircle, color: 'ember' },
-    { label: 'Total Revenue', value: `₦${stats.total_revenue.toLocaleString()}`, icon: DollarSign, color: 'volt' },
-  ] : []
+  // ── Approve Tenant ─────────────────────────────
+  const approveTenant = async (id) => {
+    try {
+      await adminApi.approveTenant(id)
 
-  const colorMap = {
-    volt: { bg: 'bg-volt-400/10', text: 'text-volt-400', border: 'border-volt-400/20' },
-    ice: { bg: 'bg-ice-400/10', text: 'text-ice-400', border: 'border-ice-400/20' },
-    ember: { bg: 'bg-ember-400/10', text: 'text-ember-400', border: 'border-ember-400/20' },
+      setTenants(prev =>
+        prev.map(t =>
+          t.id === id ? { ...t, status: 'active' } : t
+        )
+      )
+    } catch (err) {
+      console.error("Approve failed:", err)
+    }
   }
+
+  // ── Reject Tenant ─────────────────────────────
+  const rejectTenant = async (id) => {
+    try {
+      await adminApi.rejectTenant(id)
+
+      setTenants(prev =>
+        prev.map(t =>
+          t.id === id ? { ...t, status: 'suspended' } : t
+        )
+      )
+    } catch (err) {
+      console.error("Reject failed:", err)
+    }
+  }
+
+  const cards = stats ? [
+    { label: 'Total Users', value: stats.total_users.toLocaleString(), icon: Users },
+    { label: 'Confirmed Bookings', value: stats.total_bookings.toLocaleString(), icon: Ticket },
+    { label: 'Tickets Scanned', value: `${stats.tickets_scanned}/${stats.total_tickets}`, icon: CheckCircle },
+    { label: 'Total Revenue', value: `₦${stats.total_revenue.toLocaleString()}`, icon: DollarSign },
+  ] : []
 
   return (
     <div className="p-8">
+
+      {/* HEADER */}
       <div className="mb-8">
-        <h1 className="font-display font-900 text-white text-3xl uppercase tracking-wide">Dashboard</h1>
-        <p className="font-mono text-slate-500 text-xs uppercase tracking-widest mt-1">Overview & Analytics</p>
+        <h1 className="text-white text-3xl font-bold uppercase">
+          Admin Dashboard
+        </h1>
+        <p className="text-slate-400 text-sm">
+          Overview & Tenant Approval System
+        </p>
       </div>
 
+      {/* LOADING */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="bg-pitch-800 rounded-sm h-28 animate-pulse" />
+            <div key={i} className="h-24 bg-gray-800 animate-pulse rounded" />
           ))}
         </div>
       ) : (
         <>
-          {/* Stat cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {cards.map(({ label, value, icon: Icon, color }) => {
-              const c = colorMap[color]
+          {/* STATS CARDS */}
+          <div className="grid grid-cols-4 gap-4 mb-8">
+            {cards.map((c, i) => {
+              const Icon = c.icon
               return (
-                <div key={label} className="bg-pitch-800 border border-white/5 rounded-sm p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <p className="font-mono text-slate-500 text-[10px] uppercase tracking-widest">{label}</p>
-                    <div className={`w-8 h-8 rounded-sm ${c.bg} border ${c.border} flex items-center justify-center`}>
-                      <Icon size={14} className={c.text} />
-                    </div>
+                <div key={i} className="bg-gray-900 p-4 rounded border border-gray-800">
+                  <div className="flex justify-between items-center">
+                    <p className="text-slate-400 text-xs uppercase">{c.label}</p>
+                    <Icon size={16} className="text-slate-500" />
                   </div>
-                  <p className="font-display font-900 text-white text-2xl">{value}</p>
+                  <p className="text-white text-xl mt-2">{c.value}</p>
                 </div>
               )
             })}
           </div>
 
-          {/* Top events table */}
-          {stats?.top_events?.length > 0 && (
-            <div className="bg-pitch-800 border border-white/5 rounded-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
-                <BarChart3 size={14} className="text-volt-400" />
-                <h2 className="font-display font-700 text-white uppercase tracking-wide text-sm">Top Events by Revenue</h2>
-              </div>
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-white/5">
-                    {['Event', 'Bookings', 'Revenue'].map(h => (
-                      <th key={h} className="text-left px-6 py-3 font-mono text-slate-500 text-[10px] uppercase tracking-widest">{h}</th>
-                    ))}
+          {/* TENANTS SECTION */}
+          <div className="bg-gray-900 rounded border border-gray-800 mb-8">
+            <div className="p-4 border-b border-gray-800 flex items-center gap-2">
+              <Users size={16} className="text-yellow-400" />
+              <h2 className="text-white font-semibold">
+                Pending Viewing Centres
+              </h2>
+            </div>
+
+            <table className="w-full text-left text-white">
+              <thead>
+                <tr className="text-slate-400 text-sm border-b border-gray-800">
+                  <th className="p-3">Business</th>
+                  <th className="p-3">Slug</th>
+                  <th className="p-3">Status</th>
+                  <th className="p-3">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {tenants.map(t => (
+                  <tr key={t.id} className="border-b border-gray-800">
+                    <td className="p-3">{t.business_name}</td>
+                    <td className="p-3 text-slate-400">{t.slug}</td>
+                    <td className="p-3 text-yellow-400">{t.status}</td>
+
+                    <td className="p-3 flex gap-2">
+                      <button
+                        onClick={() => approveTenant(t.id)}
+                        className="bg-green-600 hover:bg-green-700 p-2 rounded"
+                      >
+                        <Check size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => rejectTenant(t.id)}
+                        className="bg-red-600 hover:bg-red-700 p-2 rounded"
+                      >
+                        <X size={14} />
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {stats.top_events.map((ev, i) => (
-                    <tr key={i} className="border-b border-white/5 hover:bg-white/2 transition-colors">
-                      <td className="px-6 py-4 font-body text-white text-sm">{ev.title}</td>
-                      <td className="px-6 py-4 font-mono text-slate-400 text-sm">{ev.bookings}</td>
-                      <td className="px-6 py-4 font-mono text-volt-400 text-sm">₦{ev.revenue.toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* TOP EVENTS */}
+          {stats?.top_events?.length > 0 && (
+            <div className="bg-gray-900 rounded border border-gray-800">
+              <div className="p-4 border-b border-gray-800 flex items-center gap-2">
+                <BarChart3 size={16} className="text-blue-400" />
+                <h2 className="text-white font-semibold">
+                  Top Events by Revenue
+                </h2>
+              </div>
+
+              <div>
+                {stats.top_events.map((ev, i) => (
+                  <div
+                    key={i}
+                    className="flex justify-between p-3 border-b border-gray-800 text-white"
+                  >
+                    <span>{ev.title}</span>
+                    <span>{ev.bookings} bookings</span>
+                    <span className="text-yellow-400">
+                      ₦{ev.revenue.toLocaleString()}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </>

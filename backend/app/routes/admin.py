@@ -2,18 +2,91 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
 from sqlalchemy import func
 from app import db
-from app.models.models import User, Event, Booking, Ticket, Venue, Section
+from datetime import datetime
+from flask_jwt_extended import get_jwt_identity
+from app.models.models import (
+    User,
+    Event,
+    Booking,
+    Ticket,
+    Venue,
+    Section,
+    Tenant,
+)
 
 admin_bp = Blueprint("admin", __name__)
 
-
 def require_admin():
     claims = get_jwt()
-    if claims.get("role") != "admin":
+
+    if claims.get("role") not in ("admin", "platform_admin", "staff"):
         return jsonify({"error": "Admin only"}), 403
+
     return None
 
+@admin_bp.get("/tenants/pending")
+@jwt_required()
+def pending_tenants():
+    err = require_admin()
+    if err:
+        return err
 
+    tenants = Tenant.query.filter_by(status="pending").all()
+
+    return jsonify([
+        {
+            "id": t.id,
+            "business_name": t.business_name,
+            "slug": t.slug,
+            "phone": t.phone,
+            "city": t.city,
+            "state": t.state,
+            "status": t.status,
+            "owner_id": t.owner_id,
+            "created_at": t.created_at.isoformat()
+        }
+        for t in tenants
+    ])
+    
+@admin_bp.patch("/tenants/<tenant_id>/approve")
+@jwt_required()
+def approve_tenant(tenant_id):
+    err = require_admin()
+    if err:
+        return err
+
+    tenant = Tenant.query.get_or_404(tenant_id)
+
+    tenant.status = "active"
+    tenant.approved_at = datetime.utcnow()
+    tenant.approved_by = get_jwt_identity()
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Tenant approved",
+        "tenant": tenant.to_dict()
+    })
+    
+@admin_bp.patch("/tenants/<tenant_id>/reject")
+@jwt_required()
+def reject_tenant(tenant_id):
+    err = require_admin()
+    if err:
+        return err
+
+    tenant = Tenant.query.get_or_404(tenant_id)
+
+    tenant.status = "suspended"
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "Tenant suspended",
+        "tenant": tenant.to_dict()
+    })
+    
+    
 @admin_bp.get("/stats")
 @jwt_required()
 def stats():
