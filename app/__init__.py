@@ -10,17 +10,16 @@ from app.extensions import db, migrate, jwt, mail
 load_dotenv()
 
 
-
 migrate = Migrate()
 jwt = JWTManager()
 mail = Mail()
+
 
 
 def create_app(config_name=None):
     app = Flask(__name__)
 
     db_url = os.getenv("DATABASE_URL")
-
     if not db_url:
         raise ValueError("DATABASE_URL is not set")
 
