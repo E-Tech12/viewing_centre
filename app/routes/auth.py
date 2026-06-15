@@ -34,8 +34,20 @@ def validate_password(p: str):
 
 
 def make_tokens(user):
-    access = create_access_token(identity=user.id)
-    refresh = create_refresh_token(identity=user.id)
+    access = create_access_token(
+        identity=user.id,
+        additional_claims={
+            "role": user.role
+        }
+    )
+
+    refresh = create_refresh_token(
+        identity=user.id,
+        additional_claims={
+            "role": user.role
+        }
+    )
+
     return access, refresh
 
 
