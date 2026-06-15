@@ -423,6 +423,3 @@ export default function OwnerDashboard() {
   )
 }
 
-git add .
-git commit -m"updated v10"
-git push
