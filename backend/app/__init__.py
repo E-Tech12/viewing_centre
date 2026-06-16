@@ -57,7 +57,9 @@ def create_app(config_name=None):
     from app.routes.sse import sse_bp
     from app.routes.tenants import tenants_bp
     from app.routes.sports import sports_bp
-
+    from app.routes.food     import food_bp
+    from app.routes.food     import food_bp
+    from app.routes.food     import food_bp
 
 
     app.register_blueprint(tenants_bp, url_prefix="/api/tenants")
@@ -70,6 +72,10 @@ def create_app(config_name=None):
     app.register_blueprint(payments_bp, url_prefix="/api/payments")
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(sse_bp, url_prefix="/api/sse")
+    app.register_blueprint(food_bp,     url_prefix="/api/food")
+    app.register_blueprint(food_bp,     url_prefix="/api/food")
+    app.register_blueprint(food_bp,     url_prefix="/api/food")
+
 
     # ── Health check ─────────────────────────────────────────────
     @app.route("/api/health")
