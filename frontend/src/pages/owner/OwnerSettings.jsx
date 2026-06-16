@@ -29,8 +29,8 @@ export default function OwnerSettings() {
   if (loading) return <div className="p-8 flex items-center justify-center"><div className="w-6 h-6 border-2 border-volt-400 border-t-transparent rounded-full animate-spin" /></div>
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide mb-8">Settings</h1>
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
+      <h1 className="font-display font-extrabold text-white text-2xl sm:text-3xl uppercase tracking-wide mb-8">Settings</h1>
 
       {/* Fee info */}
       <div className="bg-pitch-800 border border-white/5 rounded-sm p-5 mb-6 flex items-start gap-4">

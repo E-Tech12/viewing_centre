@@ -95,7 +95,7 @@ export default function OwnerCreateEvent() {
 
   // ── Step 1: Sport selection ──────────────────────────────────
   if (step === 1) return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
       <div className="flex items-center gap-3 mb-8">
         <Link to="/owner/events" className="text-slate-500 hover:text-white transition-colors"><ChevronLeft size={18} /></Link>
         <div>
@@ -123,7 +123,7 @@ export default function OwnerCreateEvent() {
 
   // ── Step 2: Event details ────────────────────────────────────
   if (step === 2) return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
       <div className="flex items-center gap-3 mb-8">
         <button onClick={() => setStep(1)} className="text-slate-500 hover:text-white transition-colors"><ChevronLeft size={18} /></button>
         <div>
@@ -211,7 +211,7 @@ export default function OwnerCreateEvent() {
 
   // ── Step 3: Ticket categories ────────────────────────────────
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-2xl">
       <div className="flex items-center gap-3 mb-8">
         <button onClick={() => setStep(2)} className="text-slate-500 hover:text-white transition-colors"><ChevronLeft size={18} /></button>
         <div>
@@ -232,7 +232,7 @@ export default function OwnerCreateEvent() {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block font-mono text-slate-500 text-[9px] uppercase tracking-widest mb-1">Name *</label>
                 <input type="text" value={cat.name} onChange={e => setCategory(i, 'name', e.target.value)}

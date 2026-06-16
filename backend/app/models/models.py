@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from app.extensions import db
+from app import db
 
 
 def generate_uuid():
@@ -29,7 +29,7 @@ class User(db.Model):
     # Relations
     bookings   = db.relationship("Booking",   back_populates="user",         lazy="dynamic")
     seat_holds = db.relationship("SeatHold",  back_populates="user",         lazy="dynamic")
-    tenant     = db.relationship("Tenant",    back_populates="owner",        uselist=False, foreign_keys="[Tenant.owner_id]")
+    tenant     = db.relationship("Tenant",    back_populates="owner",        uselist=False)
 
     def to_dict(self):
         return {
@@ -328,6 +328,8 @@ class Booking(db.Model):
     payment_ref      = db.Column(db.String(255), unique=True)
     payment_provider = db.Column(db.String(50), default="paystack")
     idempotency_key  = db.Column(db.String(255), unique=True, index=True)  # prevent duplicates
+    delivery_email   = db.Column(db.String(255))   # where to send tickets (may differ from account email)
+    food_order_total = db.Column(db.Numeric(10, 2), default=0)  # sum of food pre-order
     booked_at        = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at       = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -479,4 +481,95 @@ class Seat(db.Model):
             "id": self.id, "section_id": self.section_id,
             "row_label": self.row_label, "seat_number": self.seat_number,
             "label": self.label,
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MENU ITEMS  (per tenant — food & drinks pre-order)
+# ─────────────────────────────────────────────────────────────────────────────
+class MenuItem(db.Model):
+    __tablename__ = "menu_items"
+
+    id          = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    tenant_id   = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    name        = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.String(255))
+    price       = db.Column(db.Numeric(10, 2), nullable=False)
+    category    = db.Column(db.String(50), default="food")  # food | drinks | snacks
+    emoji       = db.Column(db.String(5), default="🍽️")
+    is_available= db.Column(db.Boolean, default=True)
+    sort_order  = db.Column(db.Integer, default=0)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    tenant      = db.relationship("Tenant")
+    order_items = db.relationship("FoodOrderItem", back_populates="menu_item", lazy="dynamic")
+
+    def to_dict(self):
+        return {
+            "id":          self.id,
+            "tenant_id":   self.tenant_id,
+            "name":        self.name,
+            "description": self.description,
+            "price":       float(self.price),
+            "category":    self.category,
+            "emoji":       self.emoji,
+            "is_available":self.is_available,
+            "sort_order":  self.sort_order,
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FOOD ORDERS  (one per booking, optional)
+# ─────────────────────────────────────────────────────────────────────────────
+class FoodOrder(db.Model):
+    __tablename__ = "food_orders"
+
+    id          = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    booking_id  = db.Column(db.String(36), db.ForeignKey("bookings.id"), nullable=False, unique=True)
+    tenant_id   = db.Column(db.String(36), db.ForeignKey("tenants.id"),  nullable=False, index=True)
+    total       = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    status      = db.Column(db.String(20), default="pending")  # pending|preparing|ready|delivered
+    notes       = db.Column(db.Text)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
+
+    booking     = db.relationship("Booking",       backref=db.backref("food_order", uselist=False))
+    tenant      = db.relationship("Tenant")
+    items       = db.relationship("FoodOrderItem", back_populates="order",
+                                   lazy="dynamic", cascade="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            "id":         self.id,
+            "booking_id": self.booking_id,
+            "total":      float(self.total),
+            "status":     self.status,
+            "notes":      self.notes,
+            "items":      [i.to_dict() for i in self.items],
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# FOOD ORDER ITEMS
+# ─────────────────────────────────────────────────────────────────────────────
+class FoodOrderItem(db.Model):
+    __tablename__ = "food_order_items"
+
+    id           = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    order_id     = db.Column(db.String(36), db.ForeignKey("food_orders.id"),  nullable=False)
+    menu_item_id = db.Column(db.String(36), db.ForeignKey("menu_items.id"),   nullable=False)
+    quantity     = db.Column(db.Integer, nullable=False, default=1)
+    unit_price   = db.Column(db.Numeric(10, 2), nullable=False)
+
+    order       = db.relationship("FoodOrder",  back_populates="items")
+    menu_item   = db.relationship("MenuItem",   back_populates="order_items")
+
+    def to_dict(self):
+        return {
+            "id":           self.id,
+            "menu_item_id": self.menu_item_id,
+            "name":         self.menu_item.name  if self.menu_item else None,
+            "emoji":        self.menu_item.emoji if self.menu_item else None,
+            "quantity":     self.quantity,
+            "unit_price":   float(self.unit_price),
+            "subtotal":     float(self.unit_price) * self.quantity,
         }

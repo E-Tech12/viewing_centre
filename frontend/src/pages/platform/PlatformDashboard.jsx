@@ -25,27 +25,27 @@ export default function PlatformDashboard() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide">Platform Overview</h1>
         <p className="font-mono text-slate-500 text-xs uppercase tracking-widest mt-1">SportZone SaaS · Platform Admin</p>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {Array.from({ length: 5 }).map((_, i) => <div key={i} className="bg-pitch-800 h-24 rounded-sm animate-pulse" />)}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
           {cards.map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-pitch-800 border border-white/5 rounded-sm p-5">
+            <div key={label} className="bg-pitch-800 border border-white/5 rounded-sm p-3 sm:p-5">
               <div className="flex items-start justify-between mb-3">
                 <p className="font-mono text-slate-500 text-[9px] uppercase tracking-widest leading-tight">{label}</p>
                 <div className={`w-7 h-7 rounded-sm ${c[color].bg} border ${c[color].border} flex items-center justify-center shrink-0`}>
                   <Icon size={12} className={c[color].text} />
                 </div>
               </div>
-              <p className="font-display font-extrabold text-white text-xl">{value}</p>
+              <p className="font-display font-extrabold text-white text-lg sm:text-xl">{value}</p>
             </div>
           ))}
         </div>

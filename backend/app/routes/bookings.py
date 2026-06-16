@@ -1,6 +1,6 @@
 """
 Bookings — category-based, with idempotency, atomic transactions,
-DB-level locking to prevent overselling, 5% platform fee.
+DB-level locking, 5% platform fee, delivery email, food pre-order total.
 """
 import os
 import hmac as hmac_lib
@@ -13,27 +13,30 @@ from sqlalchemy import select
 from app import db
 from app.models.models import (
     Booking, Ticket, TicketCategory, Event, Tenant,
-    SeatHold, PlatformTransaction, User
+    SeatHold, PlatformTransaction, User, FoodOrder, FoodOrderItem, MenuItem
 )
 from app.services.ticket_service import generate_ticket
+from app.services.email_service import send_ticket_email
 
 bookings_bp = Blueprint("bookings", __name__)
 
 PAYSTACK_SECRET = os.getenv("PAYSTACK_SECRET_KEY", "").strip()
-HOLD_SECONDS = 600
+HOLD_SECONDS    = 600
 
 
-# ── Initialize payment (with idempotency) ─────────────────────────
+# ── Initialize payment ────────────────────────────────────────────
 @bookings_bp.post("/initialize")
 @jwt_required()
 def initialize():
     import requests as req
     user_id = get_jwt_identity()
-    data    = request.get_json()
+    data    = request.get_json() or {}
 
-    event_id    = data.get("event_id")
-    selections  = data.get("selections", [])  # [{category_id, quantity}]
-    idem_key    = data.get("idempotency_key")  # client generates this
+    event_id       = data.get("event_id")
+    selections     = data.get("selections", [])   # [{category_id, quantity}]
+    idem_key       = data.get("idempotency_key")
+    delivery_email = data.get("delivery_email", "").strip()
+    food_items     = data.get("food_items", [])   # [{menu_item_id, quantity}]
 
     if not event_id or not selections:
         return jsonify({"error": "event_id and selections required"}), 400
@@ -41,7 +44,7 @@ def initialize():
     if not PAYSTACK_SECRET or PAYSTACK_SECRET.startswith("sk_test_your"):
         return jsonify({"error": "Paystack not configured — add PAYSTACK_SECRET_KEY to .env"}), 500
 
-    # Idempotency check — return existing booking if same key used
+    # Idempotency check
     if idem_key:
         existing = Booking.query.filter_by(idempotency_key=idem_key).first()
         if existing and existing.status == "confirmed":
@@ -49,17 +52,16 @@ def initialize():
         if existing and existing.status == "pending" and existing.payment_ref:
             return jsonify({
                 "booking_id": existing.id,
-                "authorization_url": None,
-                "reference": existing.payment_ref,
+                "reference":  existing.payment_ref,
                 "already_pending": True,
             })
 
-    event = Event.query.get_or_404(event_id)
+    event  = Event.query.get_or_404(event_id)
     tenant = event.tenant
 
-    # ── Atomic: lock categories and validate availability ─────────
-    total_ngn = Decimal("0")
-    validated = []
+    # ── Lock & validate ticket categories ────────────────────────
+    total_tickets = Decimal("0")
+    validated     = []
 
     for sel in selections:
         cat_id = sel.get("category_id")
@@ -67,7 +69,6 @@ def initialize():
         if qty < 1:
             continue
 
-        # SELECT ... FOR UPDATE — row-level lock prevents overselling
         cat = db.session.execute(
             select(TicketCategory)
             .where(TicketCategory.id == cat_id)
@@ -78,53 +79,70 @@ def initialize():
         if not cat:
             return jsonify({"error": f"Ticket category not found: {cat_id}"}), 404
         if cat.available < qty:
-            return jsonify({
-                "error": f"Only {cat.available} tickets left in '{cat.name}'"
-            }), 409
+            return jsonify({"error": f"Only {cat.available} tickets left in '{cat.name}'"}), 409
 
-        total_ngn += Decimal(str(cat.price)) * qty
+        total_tickets += Decimal(str(cat.price)) * qty
         validated.append({"cat": cat, "qty": qty})
 
-    if total_ngn == 0:
-        return jsonify({"error": "Total is zero — check selections"}), 400
+    if total_tickets == 0:
+        return jsonify({"error": "Total is zero — check your selections"}), 400
 
-    # ── Calculate platform fee ─────────────────────────────────────
+    # ── Validate food items (optional) ───────────────────────────
+    food_total = Decimal("0")
+    valid_food = []
+    for fi in food_items:
+        menu_item = MenuItem.query.filter_by(
+            id=fi.get("menu_item_id"), tenant_id=tenant.id, is_available=True
+        ).first()
+        if menu_item:
+            qty = int(fi.get("quantity", 1))
+            food_total += menu_item.price * qty
+            valid_food.append({"item": menu_item, "qty": qty})
+
+    grand_total = total_tickets + food_total
+
+    # ── Platform fee calculation ──────────────────────────────────
     fee_pct    = tenant.platform_fee_pct or Decimal("5.00")
-    fee_amount = (total_ngn * fee_pct / 100).quantize(Decimal("0.01"))
-    net_amount = total_ngn - fee_amount
-    total_kobo = int(total_ngn * 100)
+    # Fee only on ticket portion, not food
+    fee_amount = (total_tickets * fee_pct / 100).quantize(Decimal("0.01"))
+    net_amount = total_tickets - fee_amount
+    total_kobo = int(grand_total * 100)
 
     user = User.query.get(user_id)
 
-    # ── Create pending booking (atomic) ───────────────────────────
+    # ── Create pending booking ────────────────────────────────────
     booking = Booking(
         user_id=user_id,
         event_id=event_id,
         tenant_id=tenant.id,
         status="pending",
-        amount_paid=total_ngn,
+        amount_paid=grand_total,
         platform_fee=fee_amount,
         net_to_owner=net_amount,
+        food_order_total=food_total,
+        delivery_email=delivery_email or None,
         idempotency_key=idem_key,
     )
     db.session.add(booking)
     db.session.flush()
 
-    reference = f"SZ-{booking.id[:8].upper()}"
+    reference      = f"SZ-{booking.id[:8].upper()}"
     booking.payment_ref = reference
 
-    # ── Call Paystack ──────────────────────────────────────────────
+    # ── Call Paystack ─────────────────────────────────────────────
     payload = {
-        "email":        user.email,
-        "amount":       total_kobo,
-        "reference":    reference,
-        "callback_url": f"{os.getenv('FRONTEND_URL','http://localhost:5173')}/booking/verify",
+        "email":       delivery_email or user.email,
+        "amount":      total_kobo,
+        "reference":   reference,
+        "callback_url":f"{os.getenv('FRONTEND_URL','http://localhost:5173')}/booking/verify",
         "metadata": {
-            "booking_id": booking.id,
-            "event_id":   event_id,
-            "tenant_id":  tenant.id,
-            "selections": [{"category_id": v["cat"].id, "quantity": v["qty"]} for v in validated],
-            "user_id":    user_id,
+            "booking_id":    booking.id,
+            "event_id":      event_id,
+            "tenant_id":     tenant.id,
+            "selections":    [{"category_id": v["cat"].id, "quantity": v["qty"]} for v in validated],
+            "food_items":    [{"menu_item_id": f["item"].id, "quantity": f["qty"]} for f in valid_food],
+            "delivery_email":delivery_email,
+            "user_id":       user_id,
         },
     }
 
@@ -134,7 +152,7 @@ def initialize():
             json=payload,
             headers={
                 "Authorization": f"Bearer {PAYSTACK_SECRET}",
-                "Content-Type": "application/json",
+                "Content-Type":  "application/json",
             },
             timeout=15,
         )
@@ -178,7 +196,7 @@ def paystack_webhook():
     if event.get("event") != "charge.success":
         return jsonify({"status": "ignored"}), 200
 
-    ref = event["data"]["reference"]
+    ref     = event["data"]["reference"]
     booking = Booking.query.filter_by(payment_ref=ref).first()
     if not booking or booking.status == "confirmed":
         return jsonify({"status": "ok"}), 200
@@ -216,83 +234,64 @@ def verify(reference):
     })
 
 
-# ── User booking history ──────────────────────────────────────────
+# ── User: booking history ─────────────────────────────────────────
 @bookings_bp.get("/mine")
 @jwt_required()
 def my_bookings():
-    user_id = get_jwt_identity()
+    user_id  = get_jwt_identity()
     bookings = Booking.query.filter_by(
         user_id=user_id, status="confirmed"
     ).order_by(Booking.booked_at.desc()).all()
     return jsonify([b.to_dict(include_tickets=True) for b in bookings])
 
 
-# ── Event owner: their bookings ───────────────────────────────────
+# ── Owner: bookings ───────────────────────────────────────────────
 @bookings_bp.get("/owner/bookings")
 @jwt_required()
 def owner_bookings():
-    user_id = get_jwt_identity()
-    tenant = Tenant.query.filter_by(owner_id=user_id).first_or_404()
+    user_id  = get_jwt_identity()
+    tenant   = Tenant.query.filter_by(owner_id=user_id).first_or_404()
     event_id = request.args.get("event_id")
     q = Booking.query.filter_by(tenant_id=tenant.id, status="confirmed")
     if event_id:
         q = q.filter_by(event_id=event_id)
-    bookings = q.order_by(Booking.booked_at.desc()).all()
-    return jsonify([b.to_dict() for b in bookings])
+    return jsonify([b.to_dict() for b in q.order_by(Booking.booked_at.desc()).all()])
 
 
-# ── Event owner: revenue analytics ───────────────────────────────
+# ── Owner: analytics ─────────────────────────────────────────────
 @bookings_bp.get("/owner/analytics")
 @jwt_required()
 def owner_analytics():
     from sqlalchemy import func
     user_id = get_jwt_identity()
-    tenant = Tenant.query.filter_by(owner_id=user_id).first_or_404()
+    tenant  = Tenant.query.filter_by(owner_id=user_id).first_or_404()
 
-    total_revenue = db.session.query(
-        func.sum(Booking.amount_paid)
-    ).filter_by(tenant_id=tenant.id, status="confirmed").scalar() or 0
+    total_revenue  = db.session.query(func.sum(Booking.amount_paid)).filter_by(tenant_id=tenant.id, status="confirmed").scalar() or 0
+    total_fees     = db.session.query(func.sum(Booking.platform_fee)).filter_by(tenant_id=tenant.id, status="confirmed").scalar() or 0
+    total_food     = db.session.query(func.sum(Booking.food_order_total)).filter_by(tenant_id=tenant.id, status="confirmed").scalar() or 0
+    total_bookings = Booking.query.filter_by(tenant_id=tenant.id, status="confirmed").count()
+    total_tickets  = db.session.query(func.count(Ticket.id)).join(Booking).filter(Booking.tenant_id == tenant.id, Booking.status == "confirmed").scalar() or 0
+    tickets_used   = db.session.query(func.count(Ticket.id)).join(Booking).filter(Booking.tenant_id == tenant.id, Booking.status == "confirmed", Ticket.status == "used").scalar() or 0
 
-    total_fees = db.session.query(
-        func.sum(Booking.platform_fee)
-    ).filter_by(tenant_id=tenant.id, status="confirmed").scalar() or 0
-
-    total_bookings = Booking.query.filter_by(
-        tenant_id=tenant.id, status="confirmed"
-    ).count()
-
-    total_tickets = db.session.query(func.count(Ticket.id)).join(Booking).filter(
-        Booking.tenant_id == tenant.id,
-        Booking.status == "confirmed",
-    ).scalar() or 0
-
-    tickets_used = db.session.query(func.count(Ticket.id)).join(Booking).filter(
-        Booking.tenant_id == tenant.id,
-        Booking.status == "confirmed",
-        Ticket.status == "used",
-    ).scalar() or 0
-
-    # Per-event breakdown
     by_event = db.session.query(
-        Event.title,
-        Event.starts_at,
+        Event.title, Event.starts_at,
         func.count(Booking.id).label("bookings"),
         func.sum(Booking.amount_paid).label("revenue"),
     ).join(Booking, Booking.event_id == Event.id).filter(
-        Booking.tenant_id == tenant.id,
-        Booking.status == "confirmed",
+        Booking.tenant_id == tenant.id, Booking.status == "confirmed"
     ).group_by(Event.id, Event.title, Event.starts_at).order_by(
         func.sum(Booking.amount_paid).desc()
     ).limit(10).all()
 
     return jsonify({
-        "total_revenue":   float(total_revenue),
-        "total_fees_paid": float(total_fees),
-        "net_revenue":     float(total_revenue) - float(total_fees),
-        "total_bookings":  total_bookings,
-        "total_tickets":   total_tickets,
-        "tickets_used":    tickets_used,
-        "check_in_rate":   round(tickets_used / total_tickets * 100, 1) if total_tickets else 0,
+        "total_revenue":    float(total_revenue),
+        "total_fees_paid":  float(total_fees),
+        "net_revenue":      float(total_revenue) - float(total_fees),
+        "food_revenue":     float(total_food),
+        "total_bookings":   total_bookings,
+        "total_tickets":    total_tickets,
+        "tickets_used":     tickets_used,
+        "check_in_rate":    round(tickets_used / total_tickets * 100, 1) if total_tickets else 0,
         "top_events": [{
             "title":    r[0],
             "starts_at":r[1].isoformat(),
@@ -302,7 +301,7 @@ def owner_analytics():
     })
 
 
-# ── Ticket scanning (event owner validates at door) ───────────────
+# ── Ticket scanning ───────────────────────────────────────────────
 @bookings_bp.post("/scan")
 @jwt_required()
 def scan_ticket():
@@ -314,7 +313,7 @@ def scan_ticket():
         return jsonify({"error": "Event owner access required"}), 403
 
     from app.services.ticket_service import validate_ticket
-    qr_data = request.get_json().get("qr_data")
+    qr_data = (request.get_json() or {}).get("qr_data")
     if not qr_data:
         return jsonify({"error": "qr_data required"}), 400
 
@@ -326,7 +325,6 @@ def scan_ticket():
     if not ticket:
         return jsonify({"valid": False, "reason": "Ticket not found"}), 200
 
-    # If event owner, ensure ticket is for their event
     if role == "event_owner":
         tenant = Tenant.query.filter_by(owner_id=user_id).first()
         if not tenant or ticket.booking.event.tenant_id != tenant.id:
@@ -362,11 +360,11 @@ def platform_analytics():
     if claims.get("role") != "platform_admin":
         return jsonify({"error": "Platform admin only"}), 403
 
-    total_revenue = db.session.query(func.sum(Booking.amount_paid)).filter_by(status="confirmed").scalar() or 0
-    total_fees    = db.session.query(func.sum(Booking.platform_fee)).filter_by(status="confirmed").scalar() or 0
-    total_bookings= Booking.query.filter_by(status="confirmed").count()
-    total_tenants = Tenant.query.filter_by(status="active").count()
-    total_events  = Event.query.count()
+    total_revenue  = db.session.query(func.sum(Booking.amount_paid)).filter_by(status="confirmed").scalar() or 0
+    total_fees     = db.session.query(func.sum(Booking.platform_fee)).filter_by(status="confirmed").scalar() or 0
+    total_bookings = Booking.query.filter_by(status="confirmed").count()
+    total_tenants  = Tenant.query.filter_by(status="active").count()
+    total_events   = Event.query.count()
 
     return jsonify({
         "total_platform_revenue": float(total_fees),
@@ -379,19 +377,26 @@ def platform_analytics():
 
 # ── Shared confirm logic ──────────────────────────────────────────
 def _confirm_booking(booking, ps_data):
-    metadata   = ps_data.get("metadata", {})
-    selections = metadata.get("selections", [])
+    metadata    = ps_data.get("metadata", {})
+    selections  = metadata.get("selections", [])
+    food_items  = metadata.get("food_items", [])
+    del_email   = metadata.get("delivery_email", "")
 
-    booking.status      = "confirmed"
-    booking.amount_paid = Decimal(str(ps_data.get("amount", 0))) / 100
+    booking.status         = "confirmed"
+    booking.amount_paid    = Decimal(str(ps_data.get("amount", 0))) / 100
+    booking.delivery_email = del_email or None
 
     fee_pct    = booking.tenant.platform_fee_pct or Decimal("5.00")
-    fee_amount = (booking.amount_paid * fee_pct / 100).quantize(Decimal("0.01"))
-    net_amount = booking.amount_paid - fee_amount
+    food_total = booking.food_order_total or Decimal("0")
+    ticket_amt = booking.amount_paid - food_total
+    fee_amount = (ticket_amt * fee_pct / 100).quantize(Decimal("0.01"))
+    net_amount = ticket_amt - fee_amount
 
     booking.platform_fee = fee_amount
     booking.net_to_owner = net_amount
 
+    # Generate tickets
+    all_tickets = []
     for sel in selections:
         cat_id = sel["category_id"]
         qty    = int(sel["quantity"])
@@ -405,11 +410,35 @@ def _confirm_booking(booking, ps_data):
                 user_id=booking.user_id,
             )
             db.session.add(ticket)
+            all_tickets.append(ticket)
 
         if cat and cat.available >= qty:
             cat.available -= qty
 
-    # Record platform transaction
+    # Create food order if items present
+    if food_items:
+        fo = FoodOrder(
+            booking_id=booking.id,
+            tenant_id=booking.tenant_id,
+        )
+        db.session.add(fo)
+        db.session.flush()
+        food_total_calc = Decimal("0")
+        for fi in food_items:
+            menu_item = MenuItem.query.get(fi["menu_item_id"])
+            if menu_item:
+                qty = int(fi["quantity"])
+                foi = FoodOrderItem(
+                    order_id=fo.id,
+                    menu_item_id=menu_item.id,
+                    quantity=qty,
+                    unit_price=menu_item.price,
+                )
+                db.session.add(foi)
+                food_total_calc += menu_item.price * qty
+        fo.total = food_total_calc
+
+    # Platform transaction record
     txn = PlatformTransaction(
         booking_id=booking.id,
         tenant_id=booking.tenant_id,
@@ -420,8 +449,15 @@ def _confirm_booking(booking, ps_data):
     )
     db.session.add(txn)
 
-    # Update tenant revenue totals
+    # Update tenant totals
     booking.tenant.total_revenue = (booking.tenant.total_revenue or 0) + booking.amount_paid
     booking.tenant.total_fees    = (booking.tenant.total_fees or 0) + fee_amount
 
     db.session.commit()
+
+    # Send ticket email (non-fatal if it fails)
+    try:
+        send_ticket_email(booking, all_tickets)
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Email send failed: {e}")

@@ -1,14 +1,18 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Calendar, MapPin, Ticket, QrCode, Settings, LogOut, ChevronLeft, BarChart3 } from 'lucide-react'
+import {
+  LayoutDashboard, Calendar, MapPin, Ticket,
+  QrCode, Settings, LogOut, ChevronLeft, UtensilsCrossed
+} from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 
 const NAV = [
-  { to: '/owner',          label: 'Dashboard', icon: LayoutDashboard, exact: true },
-  { to: '/owner/events',   label: 'Events',    icon: Calendar },
-  { to: '/owner/venues',   label: 'Venues',    icon: MapPin },
-  { to: '/owner/bookings', label: 'Bookings',  icon: Ticket },
-  { to: '/owner/scanner',  label: 'Scanner',   icon: QrCode },
-  { to: '/owner/settings', label: 'Settings',  icon: Settings },
+  { to: '/owner',          label: 'Dashboard', icon: LayoutDashboard,  exact: true },
+  { to: '/owner/events',   label: 'Events',    icon: Calendar                      },
+  { to: '/owner/venues',   label: 'Venues',    icon: MapPin                        },
+  { to: '/owner/bookings', label: 'Bookings',  icon: Ticket                        },
+  { to: '/owner/menu',     label: 'Menu',      icon: UtensilsCrossed               },
+  { to: '/owner/scanner',  label: 'Scanner',   icon: QrCode                        },
+  { to: '/owner/settings', label: 'Settings',  icon: Settings                      },
 ]
 
 export default function OwnerLayout() {
@@ -19,7 +23,6 @@ export default function OwnerLayout() {
 
   return (
     <div className="min-h-screen bg-pitch-950 flex">
-      {/* Sidebar */}
       <aside className="w-56 bg-pitch-900 border-r border-white/5 flex flex-col fixed inset-y-0 z-40">
         <div className="p-4 border-b border-white/5">
           <Link to="/" className="flex items-center gap-2 mb-2">
@@ -36,7 +39,9 @@ export default function OwnerLayout() {
 
         <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
           {NAV.map(({ to, label, icon: Icon, exact }) => {
-            const active = exact ? location.pathname === to : location.pathname.startsWith(to)
+            const active = exact
+              ? location.pathname === to
+              : location.pathname.startsWith(to)
             return (
               <Link key={to} to={to}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
@@ -45,8 +50,7 @@ export default function OwnerLayout() {
                     : 'text-slate-400 hover:text-white hover:bg-white/5'
                 }`}
               >
-                <Icon size={13} />
-                {label}
+                <Icon size={13} /> {label}
               </Link>
             )
           })}

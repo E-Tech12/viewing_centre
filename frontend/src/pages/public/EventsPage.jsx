@@ -41,9 +41,10 @@ export default function EventsPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 mb-8">
+        <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 mb-6 sm:mb-8">
           {/* Sport filter */}
-          <div className="flex items-center gap-1 bg-pitch-800 border border-white/5 rounded-sm p-1 flex-wrap">
+          <div className="w-full sm:w-auto overflow-x-auto pb-1">
+          <div className="flex items-center gap-1 bg-pitch-800 border border-white/5 rounded-sm p-1 min-w-max">
             <button
               onClick={() => setFilter('sport', 'all')}
               className={`px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
@@ -56,7 +57,7 @@ export default function EventsPage() {
               <button
                 key={s.slug}
                 onClick={() => setFilter('sport', s.slug)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all whitespace-nowrap ${
                   sport === s.slug ? 'bg-volt-400 text-pitch-950' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -64,14 +65,15 @@ export default function EventsPage() {
               </button>
             ))}
           </div>
+          </div>
 
           {/* Status filter */}
-          <div className="flex items-center gap-1 bg-pitch-800 border border-white/5 rounded-sm p-1">
+          <div className="flex items-center gap-1 bg-pitch-800 border border-white/5 rounded-sm p-1 w-full sm:w-auto">
             {['upcoming', 'live', 'ended'].map(s => (
               <button
                 key={s}
                 onClick={() => setFilter('status', s)}
-                className={`px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
+                className={`flex-1 sm:flex-none px-3 py-1.5 rounded-sm text-xs font-mono uppercase tracking-widest transition-all ${
                   status === s ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'
                 }`}
               >

@@ -32,13 +32,13 @@ export default function OwnerVenues() {
   }
 
   return (
-    <div className="p-8">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
         <div>
-          <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide">Venues</h1>
+          <h1 className="font-display font-extrabold text-white text-2xl sm:text-3xl uppercase tracking-wide">Venues</h1>
           <p className="font-mono text-slate-500 text-xs uppercase tracking-widest mt-1">Manage your physical locations</p>
         </div>
-        <button onClick={openCreate} className="btn-volt text-xs"><Plus size={13} /> Add Venue</button>
+        <button onClick={openCreate} className="btn-volt text-xs w-full sm:w-auto justify-center"><Plus size={13} /> Add Venue</button>
       </div>
 
       {loading ? (

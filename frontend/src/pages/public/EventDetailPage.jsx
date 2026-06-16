@@ -77,7 +77,7 @@ export default function EventDetailPage() {
 
             {/* Sport metadata */}
             {Object.keys(event.sport_meta || {}).filter(k => event.sport_meta[k]).length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {Object.entries(event.sport_meta).filter(([, v]) => v).map(([k, v]) => (
                   <div key={k} className="bg-pitch-800 border border-white/5 rounded-sm px-4 py-3">
                     <p className="font-mono text-slate-500 text-[10px] uppercase tracking-widest mb-0.5">{k.replace(/_/g,' ')}</p>
@@ -126,7 +126,7 @@ export default function EventDetailPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="sticky top-24 bg-pitch-800 border border-white/10 rounded-sm p-6 space-y-5">
+            <div className="lg:sticky lg:top-24 bg-pitch-800 border border-white/10 rounded-sm p-5 sm:p-6 space-y-5">
               {!isPast && (
                 <>
                   <div>
@@ -139,7 +139,7 @@ export default function EventDetailPage() {
               {lowestPrice !== null && (
                 <div>
                   <p className="font-mono text-slate-500 text-[10px] uppercase tracking-widest mb-1">From</p>
-                  <p className="font-display font-extrabold text-volt-400 text-4xl">₦{lowestPrice.toLocaleString()}</p>
+                  <p className="font-display font-extrabold text-volt-400 text-3xl sm:text-4xl">₦{lowestPrice.toLocaleString()}</p>
                 </div>
               )}
               {renderCTA()}

@@ -15,7 +15,7 @@ export default function PlatformEvents() {
   }, [page])
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide">All Events</h1>
         <p className="font-mono text-slate-500 text-xs uppercase tracking-widest mt-1">{total} total across all tenants</p>

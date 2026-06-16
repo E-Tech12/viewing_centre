@@ -48,12 +48,12 @@ export default function OwnerScanner() {
   useEffect(() => () => { stopScan() }, [])
 
   return (
-    <div className="p-8 max-w-md mx-auto">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-md mx-auto">
       <div className="text-center mb-8">
         <div className="w-16 h-16 mx-auto rounded-sm bg-volt-400/10 border border-volt-400/20 flex items-center justify-center mb-4">
           <QrCode size={28} className="text-volt-400" />
         </div>
-        <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide">Ticket Scanner</h1>
+        <h1 className="font-display font-extrabold text-white text-2xl sm:text-3xl uppercase tracking-wide">Ticket Scanner</h1>
         <p className="font-mono text-slate-500 text-xs uppercase tracking-widest mt-1">Scan QR codes at the entrance</p>
       </div>
 

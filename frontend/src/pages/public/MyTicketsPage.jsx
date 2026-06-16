@@ -23,7 +23,7 @@ export default function MyTicketsPage() {
   )
 
   return (
-    <div className="min-h-screen pt-24 pb-16">
+    <div className="min-h-screen pt-20 sm:pt-24 pb-16">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
         <div className="flex items-center gap-3 mb-10">
           <Ticket size={20} className="text-volt-400" />
@@ -46,7 +46,7 @@ export default function MyTicketsPage() {
                 {/* Booking header */}
                 <button
                   onClick={() => toggle(booking.id)}
-                  className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/2 transition-colors"
+                  className="w-full flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 hover:bg-white/2 transition-colors"
                 >
                   <div className="flex items-start gap-3 text-left">
                     <span className="text-2xl mt-0.5">{booking.sport_icon || '🏆'}</span>
@@ -86,7 +86,7 @@ export default function MyTicketsPage() {
                   <div className="border-t border-white/5 animate-fade-in">
                     {(booking.tickets || []).map((ticket, i) => (
                       <div key={ticket.id} className="border-b border-white/5 last:border-b-0">
-                        <div className="flex items-center justify-between px-5 py-3">
+                        <div className="flex items-center justify-between px-4 sm:px-5 py-3">
                           <div className="flex items-center gap-3">
                             <div className="w-7 h-7 bg-volt-400/10 border border-volt-400/20 rounded-sm flex items-center justify-center">
                               <span className="font-mono text-volt-400 text-[10px] font-bold">{i + 1}</span>

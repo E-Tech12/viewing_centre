@@ -95,7 +95,7 @@ export const bookingsApi = {
   mine:       ()     => api.get('/bookings/mine'),
 }
 
-// ── Platform Admin ────────────────────────────────────────────────
+
 export const platformApi = {
   tenants:       (params)    => api.get('/tenants/', { params }),
   approveTenant: (id)        => api.post(`/tenants/${id}/approve`),
@@ -104,4 +104,20 @@ export const platformApi = {
   users:         (params)    => api.get('/admin/users', { params }),
   setRole:       (id, role)  => api.patch(`/admin/users/${id}/role`, { role }),
   allEvents:     (params)    => api.get('/events/admin/all', { params }),
+}
+
+
+// ── Food & drinks ─────────────────────────────────────────────────
+export const foodApi = {
+  eventMenu:         (eventId)          => api.get(`/food/menu/event/${eventId}`),
+  placeOrder:        (bookingId, d)     => api.post(`/food/order/${bookingId}`, d),
+  getOrder:          (bookingId)        => api.get(`/food/order/${bookingId}`),
+
+  ownerMenu:         ()                 => api.get('/food/owner/menu'),
+  createMenuItem:    (d)                => api.post('/food/owner/menu', d),
+  updateMenuItem:    (id, d)            => api.patch(`/food/owner/menu/${id}`, d),
+  deleteMenuItem:    (id)               => api.delete(`/food/owner/menu/${id}`),
+
+  ownerOrders:       (params)           => api.get('/food/owner/orders', { params }),
+  updateOrderStatus: (id, status)       => api.patch(`/food/owner/orders/${id}/status`, { status }),
 }

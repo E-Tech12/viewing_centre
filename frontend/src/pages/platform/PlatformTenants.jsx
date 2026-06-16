@@ -32,7 +32,7 @@ export default function PlatformTenants() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-6">
         <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide">Tenants</h1>
         <p className="font-mono text-slate-500 text-xs uppercase tracking-widest mt-1">Approve & manage event owners</p>
@@ -56,6 +56,7 @@ export default function PlatformTenants() {
         </div>
       ) : (
         <div className="bg-pitch-800 border border-white/5 rounded-sm overflow-hidden">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/5">
@@ -98,6 +99,7 @@ export default function PlatformTenants() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

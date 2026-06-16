@@ -36,11 +36,11 @@ export default function OwnerDashboard() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="font-display font-extrabold text-white text-3xl uppercase tracking-wide">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
+        <div className="min-w-0">
+          <h1 className="font-display font-extrabold text-white text-2xl sm:text-3xl uppercase tracking-wide truncate">
             {tenant?.business_name || 'Dashboard'}
           </h1>
           <p className="font-mono text-slate-500 text-xs uppercase tracking-widest mt-1">
@@ -49,7 +49,7 @@ export default function OwnerDashboard() {
               : 'Pending platform approval'}
           </p>
         </div>
-        <Link to="/owner/events/new" className="btn-volt text-xs">
+        <Link to="/owner/events/new" className="btn-volt text-xs w-full sm:w-auto justify-center">
           <Plus size={13} /> New Event
         </Link>
       </div>
@@ -66,7 +66,7 @@ export default function OwnerDashboard() {
       )}
 
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="bg-pitch-800 rounded-sm h-24 animate-pulse" />
           ))}
@@ -74,24 +74,24 @@ export default function OwnerDashboard() {
       ) : (
         <>
           {/* Stat cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
             {statCards.map(({ label, value, icon: Icon, color }) => {
               const c = colorMap[color]
               return (
-                <div key={label} className="bg-pitch-800 border border-white/5 rounded-sm p-5">
-                  <div className="flex items-start justify-between mb-3">
-                    <p className="font-mono text-slate-500 text-[10px] uppercase tracking-widest leading-tight">{label}</p>
-                    <div className={`w-7 h-7 rounded-sm ${c.bg} border ${c.border} flex items-center justify-center shrink-0`}>
-                      <Icon size={12} className={c.text} />
+                <div key={label} className="bg-pitch-800 border border-white/5 rounded-sm p-3 sm:p-5 min-w-0">
+                  <div className="flex items-start justify-between mb-2 sm:mb-3 gap-2">
+                    <p className="font-mono text-slate-500 text-[9px] sm:text-[10px] uppercase tracking-widest leading-tight">{label}</p>
+                    <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-sm ${c.bg} border ${c.border} flex items-center justify-center shrink-0`}>
+                      <Icon size={11} className={c.text} />
                     </div>
                   </div>
-                  <p className="font-display font-extrabold text-white text-xl">{value}</p>
+                  <p className="font-display font-extrabold text-white text-lg sm:text-xl truncate">{value}</p>
                 </div>
               )
             })}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Upcoming events */}
             <div className="bg-pitch-800 border border-white/5 rounded-sm overflow-hidden">
               <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
@@ -101,7 +101,7 @@ export default function OwnerDashboard() {
                 </Link>
               </div>
               {events.length === 0 ? (
-                <div className="p-8 text-center">
+                <div className="p-6 sm:p-8 text-center">
                   <p className="font-mono text-slate-600 text-xs uppercase tracking-widest mb-3">No events yet</p>
                   <Link to="/owner/events/new" className="btn-volt text-xs">
                     <Plus size={12} /> Create First Event
@@ -133,7 +133,7 @@ export default function OwnerDashboard() {
                 <h2 className="font-display font-bold text-white uppercase tracking-wide text-sm">Revenue by Event</h2>
               </div>
               {!analytics?.top_events?.length ? (
-                <div className="p-8 text-center">
+                <div className="p-6 sm:p-8 text-center">
                   <p className="font-mono text-slate-600 text-xs uppercase tracking-widest">No revenue data yet</p>
                 </div>
               ) : (
