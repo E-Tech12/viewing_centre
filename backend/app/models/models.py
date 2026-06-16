@@ -15,32 +15,51 @@ def generate_uuid():
 class User(db.Model):
     __tablename__ = "users"
 
-    id            = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    email         = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    password_hash = db.Column(db.String(255), nullable=False)
-    full_name     = db.Column(db.String(255), nullable=False)
-    phone         = db.Column(db.String(20))
-    role          = db.Column(db.String(20), nullable=False, default="user")
-    loyalty_points= db.Column(db.Integer, default=0)
-    is_active     = db.Column(db.Boolean, default=True)
-    created_at    = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at    = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    id             = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    email          = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    password_hash  = db.Column(db.String(255), nullable=False)
+    full_name      = db.Column(db.String(255), nullable=False)
+    phone          = db.Column(db.String(20))
+    role           = db.Column(db.String(20), nullable=False, default="user")
+    loyalty_points = db.Column(db.Integer, default=0)
+    is_active      = db.Column(db.Boolean, default=True)
+    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at     = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
 
     # Relations
-    bookings   = db.relationship("Booking",   back_populates="user",         lazy="dynamic")
-    seat_holds = db.relationship("SeatHold",  back_populates="user",         lazy="dynamic")
-    tenant     = db.relationship("Tenant",    back_populates="owner",        uselist=False)
+    bookings = db.relationship(
+        "Booking",
+        back_populates="user",
+        lazy="dynamic"
+    )
+
+    seat_holds = db.relationship(
+        "SeatHold",
+        back_populates="user",
+        lazy="dynamic"
+    )
+
+    tenant = db.relationship(
+        "Tenant",
+        back_populates="owner",
+        uselist=False,
+        foreign_keys="Tenant.owner_id"
+    )
 
     def to_dict(self):
         return {
-            "id":             self.id,
-            "email":          self.email,
-            "full_name":      self.full_name,
-            "phone":          self.phone,
-            "role":           self.role,
+            "id": self.id,
+            "email": self.email,
+            "full_name": self.full_name,
+            "phone": self.phone,
+            "role": self.role,
             "loyalty_points": self.loyalty_points,
-            "is_active":      self.is_active,
-            "created_at":     self.created_at.isoformat(),
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat(),
         }
 
 
@@ -50,52 +69,110 @@ class User(db.Model):
 class Tenant(db.Model):
     __tablename__ = "tenants"
 
-    id           = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    owner_id     = db.Column(db.String(36), db.ForeignKey("users.id"), unique=True, nullable=False)
-    business_name= db.Column(db.String(255), nullable=False)
-    slug         = db.Column(db.String(100), unique=True, nullable=False, index=True)
-    description  = db.Column(db.Text)
-    logo_url     = db.Column(db.String(500))
-    address      = db.Column(db.Text)
-    city         = db.Column(db.String(100))
-    state        = db.Column(db.String(100))
-    country      = db.Column(db.String(100), default="Nigeria")
-    phone        = db.Column(db.String(20))
-    # SaaS financial
-    platform_fee_pct  = db.Column(db.Numeric(5, 2), default=Decimal("5.00"))  # 5%
-    paystack_subaccount = db.Column(db.String(100))   # for split payments in future
-    total_revenue= db.Column(db.Numeric(12, 2), default=0)
-    total_fees   = db.Column(db.Numeric(12, 2), default=0)
-    # Status
-    status       = db.Column(db.String(20), default="pending")  # pending|active|suspended
-    approved_at  = db.Column(db.DateTime)
-    approved_by  = db.Column(db.String(36), db.ForeignKey("users.id"))
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=generate_uuid
+    )
 
-    owner    = db.relationship("User", back_populates="tenant",  foreign_keys=[owner_id])
-    venues   = db.relationship("Venue",  back_populates="tenant", lazy="dynamic", cascade="all, delete-orphan")
-    events   = db.relationship("Event",  back_populates="tenant", lazy="dynamic", cascade="all, delete-orphan")
+    owner_id = db.Column(
+        db.String(36),
+        db.ForeignKey("users.id"),
+        unique=True,
+        nullable=False
+    )
+
+    business_name = db.Column(db.String(255), nullable=False)
+    slug = db.Column(db.String(100), unique=True, nullable=False, index=True)
+
+    description = db.Column(db.Text)
+    logo_url = db.Column(db.String(500))
+
+    address = db.Column(db.Text)
+    city = db.Column(db.String(100))
+    state = db.Column(db.String(100))
+    country = db.Column(db.String(100), default="Nigeria")
+
+    phone = db.Column(db.String(20))
+
+    platform_fee_pct = db.Column(
+        db.Numeric(5, 2),
+        default=Decimal("5.00")
+    )
+
+    paystack_subaccount = db.Column(db.String(100))
+
+    total_revenue = db.Column(
+        db.Numeric(12, 2),
+        default=0
+    )
+
+    total_fees = db.Column(
+        db.Numeric(12, 2),
+        default=0
+    )
+
+    status = db.Column(
+        db.String(20),
+        default="pending"
+    )
+
+    approved_at = db.Column(db.DateTime)
+
+    approved_by = db.Column(
+        db.String(36),
+        db.ForeignKey("users.id")
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    owner = db.relationship(
+        "User",
+        back_populates="tenant",
+        foreign_keys=[owner_id]
+    )
+
+    approver = db.relationship(
+        "User",
+        foreign_keys=[approved_by]
+    )
+
+    venues = db.relationship(
+        "Venue",
+        back_populates="tenant",
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
+
+    events = db.relationship(
+        "Event",
+        back_populates="tenant",
+        lazy="dynamic",
+        cascade="all, delete-orphan"
+    )
 
     def to_dict(self):
         return {
-            "id":               self.id,
-            "owner_id":         self.owner_id,
-            "business_name":    self.business_name,
-            "slug":             self.slug,
-            "description":      self.description,
-            "logo_url":         self.logo_url,
-            "address":          self.address,
-            "city":             self.city,
-            "state":            self.state,
-            "country":          self.country,
-            "phone":            self.phone,
+            "id": self.id,
+            "owner_id": self.owner_id,
+            "business_name": self.business_name,
+            "slug": self.slug,
+            "description": self.description,
+            "logo_url": self.logo_url,
+            "address": self.address,
+            "city": self.city,
+            "state": self.state,
+            "country": self.country,
+            "phone": self.phone,
             "platform_fee_pct": float(self.platform_fee_pct),
-            "total_revenue":    float(self.total_revenue),
-            "total_fees":       float(self.total_fees),
-            "status":           self.status,
-            "created_at":       self.created_at.isoformat(),
+            "total_revenue": float(self.total_revenue),
+            "total_fees": float(self.total_fees),
+            "status": self.status,
+            "created_at": self.created_at.isoformat(),
         }
-
 
 # ─────────────────────────────────────────────────────────────────────────────
 # VENUES  (scoped to tenant)
@@ -103,29 +180,65 @@ class Tenant(db.Model):
 class Venue(db.Model):
     __tablename__ = "venues"
 
-    id             = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    tenant_id      = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
-    name           = db.Column(db.String(255), nullable=False)
-    address        = db.Column(db.Text)
-    city           = db.Column(db.String(100))
-    state          = db.Column(db.String(100))
-    total_capacity = db.Column(db.Integer, nullable=False, default=0)
-    is_active      = db.Column(db.Boolean, default=True)
-    created_at     = db.Column(db.DateTime, default=datetime.utcnow)
+    id = db.Column(
+        db.String(36),
+        primary_key=True,
+        default=generate_uuid
+    )
 
-    tenant = db.relationship("Tenant", back_populates="venues")
-    events = db.relationship("Event",  back_populates="venue",  lazy="dynamic")
+    tenant_id = db.Column(
+        db.String(36),
+        db.ForeignKey("tenants.id"),
+        nullable=False,
+        index=True
+    )
+
+    name = db.Column(
+        db.String(255),
+        nullable=False
+    )
+
+    address = db.Column(db.Text)
+    city = db.Column(db.String(100))
+    state = db.Column(db.String(100))
+
+    total_capacity = db.Column(
+        db.Integer,
+        nullable=False,
+        default=0
+    )
+
+    is_active = db.Column(
+        db.Boolean,
+        default=True
+    )
+
+    created_at = db.Column(
+        db.DateTime,
+        default=datetime.utcnow
+    )
+
+    tenant = db.relationship(
+        "Tenant",
+        back_populates="venues"
+    )
+
+    events = db.relationship(
+        "Event",
+        back_populates="venue",
+        lazy="dynamic"
+    )
 
     def to_dict(self):
         return {
-            "id":             self.id,
-            "tenant_id":      self.tenant_id,
-            "name":           self.name,
-            "address":        self.address,
-            "city":           self.city,
-            "state":          self.state,
+            "id": self.id,
+            "tenant_id": self.tenant_id,
+            "name": self.name,
+            "address": self.address,
+            "city": self.city,
+            "state": self.state,
             "total_capacity": self.total_capacity,
-            "is_active":      self.is_active,
+            "is_active": self.is_active,
         }
 
 
